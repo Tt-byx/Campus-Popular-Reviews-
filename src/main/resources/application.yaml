@@ -1,0 +1,17 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: gantaniangde
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: zbq060423...
+  jackson:
+    default-property-inclusion: non_null
+mybatis-plus:
+  type-aliases-package: com.meategg.entity
+logging:
+  level:
+    com.meategg: debug
