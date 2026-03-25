@@ -32,7 +32,11 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <version>6.2.3</version> <!-- 可根据你的 Spring Boot 版本调整，推荐使用 5.7.x 或 6.x -->
+        </dependency>
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
