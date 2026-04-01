@@ -10,4 +10,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface userService extends IService<User> {
     public Result login(String username, String password);
+
+    Result register(String username, String password);
 }
