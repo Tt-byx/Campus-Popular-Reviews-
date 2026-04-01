@@ -1,5 +1,6 @@
 package com.meategg.Utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
@@ -20,13 +21,6 @@ public class JwtUtils {
         .signWith(SignatureAlgorithm.HS256, key)
         .compact();
   }
-  public String getUsername(String jwt) {
-    return Jwts.parser()
-        .setSigningKey(key)
-        .parseClaimsJws(jwt)
-        .getBody()
-        .getSubject();
-  }
   public boolean isExpire(String jwt) {
     return Jwts.parser()
         .setSigningKey(key)
@@ -35,7 +29,16 @@ public class JwtUtils {
         .getExpiration()
         .before(new Date());
   }
-
+  public Claims parseJwt(String jwt) {
+    return Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(jwt)
+            .getBody();
+  }
+  public String getUsername(String jwt) {
+    return parseJwt(jwt).getSubject();
+  }
 
 
 }
