@@ -8,10 +8,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FilterConfig {
     @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilter(JwtAuthenticationFilter filter) {
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
         FilterRegistrationBean<JwtAuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(filter);
-        registrationBean.addUrlPatterns("/api/*"); // 保护需要登录的接口
+        registrationBean.addUrlPatterns("/api/*");
+        registrationBean.setOrder(1);
         return registrationBean;
     }
 }

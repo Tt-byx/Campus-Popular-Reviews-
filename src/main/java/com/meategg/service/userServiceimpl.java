@@ -5,8 +5,8 @@ import com.meategg.Utils.JwtUtils;
 import com.meategg.entity.Result;
 import com.meategg.entity.User;
 import com.meategg.mapper.UserMapper;
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 
 import static com.baomidou.mybatisplus.core.toolkit.Wrappers.query;
 
+@Service
 public class userServiceimpl extends ServiceImpl<UserMapper, User> implements userService {
 @Resource
 private JwtUtils jwtUtils;
