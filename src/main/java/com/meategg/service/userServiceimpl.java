@@ -1,6 +1,7 @@
 package com.meategg.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.meategg.DTO.LoginResponse;
 import com.meategg.Utils.JwtUtils;
 import com.meategg.entity.Result;
 import com.meategg.entity.User;
@@ -22,12 +23,21 @@ private JwtUtils jwtUtils;
     @Override
     public Result login(String username, String password) {
         User user = query().eq("username", username).one();
-    if(user == null){return Result.fail("用户名或密码错误");}
-        if (!BCrypt.checkpw(password, user.getPassword())) {
-            return Result.fail("用户名或密码错误");
+        if(user == null){
+            return Result.fail(401, "用户名或密码错误");
         }
-    String jwt = jwtUtils.createJwt(username);
-    return Result.ok(jwt);
+        if (!BCrypt.checkpw(password, user.getPassword())) {
+            return Result.fail(401, "用户名或密码错误");
+        }
+        
+        String jwt = jwtUtils.createJwt(username);
+        LoginResponse response = new LoginResponse(
+            jwt,
+            "Bearer",
+            jwtUtils.getExpireInSeconds()
+        );
+        
+        return Result.ok(200, "登录成功", response);
     }
 
     @Override

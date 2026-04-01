@@ -21,6 +21,11 @@ public class JwtUtils {
         .signWith(SignatureAlgorithm.HS256, key)
         .compact();
   }
+  
+  public long getExpireInSeconds() {
+    return expire;
+  }
+
   public boolean isExpire(String jwt) {
     return Jwts.parser()
         .setSigningKey(key)
