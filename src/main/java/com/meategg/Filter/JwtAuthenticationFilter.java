@@ -15,24 +15,37 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private JwtUtils jwtUtils;
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-       String jwt=request.getHeader("Authorization");
-       if (jwtUtils.isExpire(jwt)) {
-           response.setStatus(401);
+       String jwt = request.getHeader("Authorization");
+       
+       if (jwt == null || jwt.trim().isEmpty()) {
+           filterChain.doFilter(request, response);
            return;
        }
-       String username=null;
-       String token=null;
-       if (request.getHeader("Authorization") != null && jwt.startsWith("Bearer")) {
-             token=request.getHeader("Authorization").substring(7);
-             username=jwtUtils.getUsername(token);
+       
+       if (jwt.startsWith("Bearer")) {
+           jwt = jwt.substring(7);
        }
-       if(username!=null&&!jwtUtils.isExpire( token))
-       {request.setAttribute("username",username);}
-
-
+       
+       try {
+           if (jwtUtils.isExpire(jwt)) {
+               response.setStatus(401);
+               response.getWriter().write("Token 已过期");
+               return;
+           }
+       } catch (Exception e) {
+           response.setStatus(401);
+           response.getWriter().write("无效的 Token");
+           return;
+       }
+       
+       String username = jwtUtils.getUsername(jwt);
+       if (username != null) {
+           request.setAttribute("username", username);
+       }
+        
         filterChain.doFilter(request, response);
     }
-
 }
