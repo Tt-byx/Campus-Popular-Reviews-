@@ -1,16 +1,20 @@
 package com.meategg.service;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.meategg.Utils.JwtUtils;
 import com.meategg.entity.Result;
+import com.meategg.entity.User;
+import com.meategg.mapper.UserMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import javax.annotation.Resource;
 
 import static com.baomidou.mybatisplus.core.toolkit.Wrappers.query;
 
-public class userServiceimpl implements userService {
+public class userServiceimpl extends ServiceImpl<UserMapper, User> implements userService {
 @Resource
 private JwtUtils jwtUtils;
+
     @Override
     public Result login(String username, String password) {
         User user = query().eq("username", username).one();
