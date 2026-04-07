@@ -1,0 +1,117 @@
+/* Apple-like minimalist auth UI */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --accent: #007aff;
+  --bg: #f8f9fa;
+  --text: #0b1220;
+  --muted: rgba(11, 18, 32, 0.6);
+  --card-max: 360px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+.auth-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 四周留白：大屏更宽、小屏仍保留安全边距 */
+  padding: clamp(40px, 10vh, 72px) clamp(22px, 6vw, 48px);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: min(var(--card-max), calc(100vw - 2 * clamp(22px, 6vw, 48px)));
+  margin-left: auto;
+  margin-right: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(11, 18, 32, 0.06);
+  box-shadow: 0 14px 40px rgba(11, 18, 32, 0.08);
+  padding: clamp(28px, 5vw, 36px) clamp(26px, 5vw, 34px);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.auth-logo-icon {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 10px auto;
+  border-radius: 14px;
+  background: rgba(0, 122, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-logo-icon::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+
+.auth-title {
+  text-align: center;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin: 4px 0 22px 0;
+}
+
+.auth-input {
+  border-radius: 12px;
+}
+
+.auth-input:focus {
+  border-color: rgba(0, 122, 255, 0.55);
+  box-shadow: 0 0 0 0.2rem rgba(0, 122, 255, 0.12);
+}
+
+.auth-btn {
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 650;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.22);
+}
+
+.auth-links {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 14px;
+}
+
+.auth-links a {
+  color: #2f7dff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 18px;
+}
+
