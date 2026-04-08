@@ -15,27 +15,21 @@
       <div class="h3 m-0 fw-bold">校圈</div>
     </div>
 
-    <div class="auth-title h4">欢迎回来</div>
+    <div class="auth-title h4">欢迎登录</div>
 
     <div id="authMsg" class="alert d-none" role="alert"></div>
 
-    <form id="loginForm">
+    <form id="loginForm" method="post" action="javascript:void(0);">
       <div class="mb-3">
-        <label for="username" class="form-label">学号</label>
+        <label for="username" class="form-label">用户名</label>
         <input id="username" name="username" type="text" class="form-control auth-input"
-               placeholder="例如: 20231234A" autocomplete="username" required />
-        <div class="form-text">8位数字+1位字母</div>
+               placeholder="请输入用户名" autocomplete="username" required />
       </div>
 
       <div class="mb-3">
         <label for="password" class="form-label">密码</label>
         <input id="password" name="password" type="password" class="form-control auth-input"
                placeholder="请输入密码" autocomplete="current-password" required />
-      </div>
-
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" value="1" id="remember" />
-        <label class="form-check-label" for="remember">记住我</label>
       </div>
 
       <button type="submit" class="btn btn-primary w-100 auth-btn">登录</button>
@@ -49,7 +43,7 @@
         <a th:href="@{/register}">立即注册</a>
       </div>
 
-      <div class="auth-footer">仅限本校学生使用 | 学号验证</div>
+      <div class="auth-footer">输入用户名和密码即可登录</div>
     </form>
   </div>
 </div>
@@ -59,12 +53,9 @@
   (() => {
     const form = document.getElementById('loginForm');
     const msg = document.getElementById('authMsg');
-    const remember = document.getElementById('remember');
     const usernameEl = document.getElementById('username');
     const passwordEl = document.getElementById('password');
     const forgotLink = document.getElementById('forgotLink');
-
-    const sidRe = /^\d{8}[A-Za-z]$/;
 
     const setMsg = (text, type) => {
       msg.className = 'alert d-block alert-' + type;
@@ -75,27 +66,31 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = usernameEl.value.trim().toUpperCase();
+      const username = usernameEl.value.trim();
       const password = passwordEl.value;
 
-      if (!sidRe.test(username)) return setMsg('学号格式不正确（8位数字+1位字母）', 'danger');
-      if (!password) return setMsg('请输入密码', 'danger');
+      if (!username || !password) return setMsg('用户名和密码不能为空', 'danger');
 
-      const res = await fetch('/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const result = await res.json().catch(() => null);
+      try {
+        const res = await fetch('/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const result = await res.json().catch(() => null);
 
-      if (result && result.code === 200) {
-        const storage = remember.checked ? localStorage : sessionStorage;
-        storage.setItem('token', result.data.token);
-        storage.setItem('tokenType', result.data.tokenType || 'Bearer');
-        storage.setItem('expiresIn', String(result.data.expiresIn || ''));
-        setMsg('登录成功', 'success');
-      } else {
-        setMsg((result && result.message) ? result.message : '登录失败', 'danger');
+        if (result && result.code === 200) {
+          if (result.data && result.data.token) {
+            localStorage.setItem('token', result.data.token);
+            localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+            localStorage.setItem('expiresIn', String(result.data.expiresIn || ''));
+          }
+          setMsg('登录成功', 'success');
+        } else {
+          setMsg((result && result.message) ? result.message : '登录失败', 'danger');
+        }
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
       }
     });
   })();
