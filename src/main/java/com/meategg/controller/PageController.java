@@ -5,6 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class PageController {
+    @GetMapping("/")
+    public String homePage() {
+        return "redirect:/create-post";
+    }
 
     @GetMapping("/login")
     public String loginPage() {
@@ -14,6 +18,16 @@ public class PageController {
     @GetMapping("/register")
     public String registerPage() {
         return "register";
+    }
+
+    @GetMapping("/post")
+    public String postPage() {
+        return "post";
+    }
+
+    @GetMapping("/create-post")
+    public String createPostPage() {
+        return "create-post";
     }
 }
 

@@ -3,6 +3,7 @@ package com.meategg.Utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -10,8 +11,10 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-  private final String key = "123654789";
-  private final long expire = 60 * 60 * 24;
+  @Value("${jwt.secret}")
+  private String key;
+  @Value("${jwt.expire}")
+  private long expire;
 
   public String createJwt(String username) {
     return Jwts.builder()

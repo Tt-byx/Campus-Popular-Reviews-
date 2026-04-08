@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>发布帖子 - 校圈</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background: linear-gradient(135deg, #f3f6ff 0%, #f8fafc 100%); min-height: 100vh; }
+    .wrap { max-width: 760px; margin: 40px auto; padding: 0 16px; }
+    .card-box { background: #fff; border-radius: 16px; box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08); padding: 24px; }
+    .title { font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+    .helper { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+    textarea { min-height: 220px; resize: vertical; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card-box">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h1 class="h4 title m-0">发布帖子</h1>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" href="/create-post">帖子广场</a>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/login}" href="/login">登录页</a>
+      </div>
+    </div>
+    <div class="helper">填写标题和内容即可发布。未登录会自动跳转到登录页。</div>
+
+    <div id="formMsg" class="alert d-none" role="alert"></div>
+
+    <form id="postForm" method="post" action="javascript:void(0);">
+      <div class="mb-3">
+        <label for="title" class="form-label">标题</label>
+        <input id="title" name="title" type="text" class="form-control" maxlength="100" placeholder="请输入标题（最多100字）" required />
+      </div>
+
+      <div class="mb-3">
+        <label for="content" class="form-label">内容</label>
+        <textarea id="content" name="content" class="form-control" placeholder="请输入帖子内容" required></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="score" class="form-label">评分（可选，0-5）</label>
+        <input id="score" name="score" type="number" class="form-control" min="0" max="5" step="1" placeholder="0-5" />
+      </div>
+
+      <div class="d-flex gap-2">
+        <button id="submitBtn" type="submit" class="btn btn-primary">发布帖子</button>
+        <button type="button" id="resetBtn" class="btn btn-outline-secondary">重置</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.getElementById('postForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const msg = document.getElementById('formMsg');
+    const titleEl = document.getElementById('title');
+    const contentEl = document.getElementById('content');
+    const scoreEl = document.getElementById('score');
+
+    const token = (localStorage.getItem('token') || '').trim();
+    const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
+
+    const setMsg = (text, type) => {
+      msg.className = 'alert d-block alert-' + type;
+      msg.textContent = text;
+    };
+
+    const clearMsg = () => {
+      msg.className = 'alert d-none';
+      msg.textContent = '';
+    };
+
+    const redirectToLogin = () => {
+      sessionStorage.setItem('authMsg', '请先登录后再发布帖子');
+      location.href = '/login';
+    };
+
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': tokenType + ' ' + token
+    };
+
+    if (!token) {
+      redirectToLogin();
+      return;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = (titleEl.value || '').trim();
+      const content = (contentEl.value || '').trim();
+      const scoreRaw = (scoreEl.value || '').trim();
+
+      if (!title) return setMsg('标题不能为空', 'danger');
+      if (title.length > 100) return setMsg('标题长度不能超过 100 字', 'danger');
+      if (!content) return setMsg('内容不能为空', 'danger');
+      if (scoreRaw && Number.isNaN(Number(scoreRaw))) return setMsg('评分必须是数字', 'danger');
+      if (scoreRaw && (Number(scoreRaw) < 0 || Number(scoreRaw) > 5)) return setMsg('评分范围必须在 0 到 5', 'danger');
+
+      const payload = { title, content };
+      if (scoreRaw) payload.score = Number(scoreRaw);
+
+      submitBtn.disabled = true;
+      clearMsg();
+      try {
+        const res = await fetch('/post', {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json().catch(() => null);
+
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        if (!res.ok || !result || result.code !== 200) {
+          const err = (result && result.message) ? result.message : ('发布失败（' + res.status + '）');
+          setMsg(err, 'danger');
+          return;
+        }
+
+        setMsg('发布成功，正在返回帖子广场...', 'success');
+        form.reset();
+        setTimeout(() => {
+          location.href = '/create-post';
+        }, 500);
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      clearMsg();
+    });
+  })();
+</script>
+</body>
+</html>
