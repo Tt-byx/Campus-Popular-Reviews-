@@ -1,10 +1,12 @@
 package com.meategg.controller;
 
 import com.meategg.DTO.LoginRequest;
-import com.meategg.DTO.LoginResponse;
 import com.meategg.entity.Result;
 import com.meategg.service.userService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
@@ -34,4 +36,5 @@ private userService userservice;
         }
         return userservice.register(request.getUsername(), request.getPassword());
     }
+
 }

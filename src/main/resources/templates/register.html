@@ -14,7 +14,7 @@
       <div class="auth-logo-icon"></div>
       <div class="h3 m-0 fw-bold">校圈</div>
       <div class="mt-1 text-center" style="color: rgba(11,18,32,0.6); font-size: 14px;">
-        加入校园真实评价社区
+        快速创建你的账号
       </div>
     </div>
 
@@ -22,12 +22,11 @@
 
     <div id="authMsg" class="alert d-none" role="alert"></div>
 
-    <form id="registerForm">
+    <form id="registerForm" method="post" action="javascript:void(0);">
       <div class="mb-3">
-        <label for="username" class="form-label">学号</label>
+        <label for="username" class="form-label">用户名</label>
         <input id="username" name="username" type="text" class="form-control auth-input"
-               placeholder="20231234A" autocomplete="username" required />
-        <div class="form-text">请输入8位数字+1位字母的学号</div>
+               placeholder="请输入用户名" autocomplete="username" required />
       </div>
 
       <div class="mb-3">
@@ -49,7 +48,7 @@
       </div>
 
       <div class="auth-footer">
-        注册即表示同意服务条款 | 学号仅用于验证真实学生身份，不会公开
+        注册即表示同意服务条款
       </div>
     </form>
   </div>
@@ -64,8 +63,6 @@
     const passwordEl = document.getElementById('password');
     const confirmEl = document.getElementById('confirmPassword');
 
-    const sidRe = /^\d{8}[A-Za-z]$/;
-
     const setMsg = (text, type) => {
       msg.className = 'alert d-block alert-' + type;
       msg.textContent = text;
@@ -73,26 +70,30 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = usernameEl.value.trim().toUpperCase();
+      const username = usernameEl.value.trim();
       const password = passwordEl.value;
       const confirmPassword = confirmEl.value;
 
-      if (!sidRe.test(username)) return setMsg('学号格式不正确（8位数字+1位字母）', 'danger');
+      if (!username) return setMsg('用户名不能为空', 'danger');
       if (!password || password.length < 6) return setMsg('密码长度至少为 6 位', 'danger');
       if (password !== confirmPassword) return setMsg('两次输入的密码不一致', 'danger');
 
-      const res = await fetch('/user/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const result = await res.json().catch(() => null);
+      try {
+        const res = await fetch('/user/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const result = await res.json().catch(() => null);
 
-      if (result && result.code === 200) {
-        setMsg('注册成功，即将跳转到登录页...', 'success');
-        setTimeout(() => location.href = '/login', 800);
-      } else {
-        setMsg((result && result.message) ? result.message : '注册失败', 'danger');
+        if (result && result.code === 200) {
+          setMsg('注册成功，即将跳转到登录页...', 'success');
+          setTimeout(() => location.href = '/login', 800);
+        } else {
+          setMsg((result && result.message) ? result.message : '注册失败', 'danger');
+        }
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
       }
     });
   })();
