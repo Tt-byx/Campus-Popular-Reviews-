@@ -29,5 +29,10 @@ public class PageController {
     public String createPostPage() {
         return "create-post";
     }
+    
+    @GetMapping("/post-detail")
+    public String postDetailPage() {
+        return "post-detail";
+    }
 }
 

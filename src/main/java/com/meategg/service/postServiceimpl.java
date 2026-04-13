@@ -5,6 +5,7 @@ import com.meategg.DTO.PostCreateRequest;
 import com.meategg.entity.Post;
 import com.meategg.entity.Result;
 import com.meategg.entity.User;
+import com.meategg.mapper.CommentMapper;
 import com.meategg.mapper.PostMapper;
 import com.meategg.mapper.UserMapper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     private PostMapper postMapper;
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private CommentMapper commentMapper;
 
     @Override
     public Result createPost(PostCreateRequest request, String username) {
@@ -104,6 +107,83 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
             item.put("createdAt", p.getCreatedAt());
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result getPostById(Long id) {
+        if (id == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        Post post = postMapper.selectById(id);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+        User user = userMapper.selectById(post.getUserId());
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", post.getId());
+        data.put("title", post.getTitle());
+        data.put("content", post.getContent());
+        data.put("score", post.getScore());
+        data.put("userId", post.getUserId());
+        data.put("username", user != null ? user.getUsername() : "未知用户");
+        data.put("createdAt", post.getCreatedAt());
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result addComment(Long postId, String username, String content) {
+        if (postId == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail(401, "请先登录");
+        }
+        if (content == null || content.trim().isEmpty()) {
+            return Result.fail("评论内容不能为空");
+        }
+        if (content.trim().length() > 500) {
+            return Result.fail("评论长度不能超过500字");
+        }
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+        User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
+                .eq("username", username.trim())
+                .last("limit 1"));
+        if (user == null) {
+            return Result.fail(401, "当前登录用户不存在");
+        }
+        com.meategg.entity.Comment comment = new com.meategg.entity.Comment();
+        comment.setPostId(postId);
+        comment.setUsername(username.trim());
+        comment.setContent(content.trim());
+        comment.setCreatedAt(LocalDateTime.now());
+        commentMapper.insert(comment);
+        return Result.ok(200, "评论发表成功", null);
+    }
+
+    @Override
+    public Result getCommentsByPostId(Long postId) {
+        if (postId == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+        List<com.meategg.entity.Comment> comments = commentMapper.getCommentsByPostId(postId);
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (com.meategg.entity.Comment comment : comments) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", comment.getId());
+            item.put("postId", comment.getPostId());
+            item.put("username", comment.getUsername());
+            item.put("content", comment.getContent());
+            item.put("createdAt", comment.getCreatedAt());
             data.add(item);
         }
         return Result.ok(data);
