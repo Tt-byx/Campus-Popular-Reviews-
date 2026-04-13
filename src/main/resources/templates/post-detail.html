@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>帖子详情 - 校圈</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background: #f8fafc; }
+    .wrap { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+    .post-card { border: 0; border-radius: 14px; box-shadow: 0 8px 20px rgba(15,23,42,0.06); margin-bottom: 24px; }
+    .post-title { font-weight: 700; color: #0f172a; }
+    .meta { color: #64748b; font-size: 13px; }
+    .content { color: #334155; white-space: pre-wrap; line-height: 1.6; }
+    .comment-card { border: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(15,23,42,0.04); }
+    .comment-content { color: #475569; line-height: 1.5; }
+    .comment-input { border-radius: 12px; }
+    .btn-primary { border-radius: 12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 m-0">帖子详情</h1>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="/create-post">返回广场</a>
+      <a class="btn btn-outline-secondary btn-sm" href="/login">登录页</a>
+    </div>
+  </div>
+
+  <div id="msg" class="alert d-none" role="alert"></div>
+  
+  <!-- 帖子详情 -->
+  <div id="postDetail" class="card post-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-3">
+        <div class="post-title" id="postTitle">加载中...</div>
+        <span class="badge text-bg-light" id="postScore">评分：-</span>
+      </div>
+      <div class="meta mt-1" id="postMeta">作者：加载中 · 加载中</div>
+      <div class="content mt-3" id="postContent">加载中...</div>
+    </div>
+  </div>
+
+  <!-- 评论区 -->
+  <div class="mb-3">
+    <h5 class="fw-semibold">评论 ( <span id="commentCount">0</span> )</h5>
+  </div>
+
+  <!-- 评论输入 -->
+  <div class="card comment-card mb-4">
+    <div class="card-body">
+      <form id="commentForm">
+        <div class="mb-2">
+          <textarea id="commentContent" class="form-control comment-input" placeholder="写下你的评论..." rows="3" required></textarea>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 评论列表 -->
+  <div id="commentList" class="d-grid gap-3"></div>
+</div>
+
+<script>
+  (() => {
+    const msg = document.getElementById('msg');
+    const postTitle = document.getElementById('postTitle');
+    const postScore = document.getElementById('postScore');
+    const postMeta = document.getElementById('postMeta');
+    const postContent = document.getElementById('postContent');
+    const commentCount = document.getElementById('commentCount');
+    const commentList = document.getElementById('commentList');
+    const commentForm = document.getElementById('commentForm');
+    const commentContent = document.getElementById('commentContent');
+    
+    const token = (localStorage.getItem('token') || '').trim();
+    const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
+
+    const setMsg = (text, type) => {
+      msg.className = 'alert d-block alert-' + type;
+      msg.textContent = text;
+    };
+
+    const clearMsg = () => {
+      msg.className = 'alert d-none';
+      msg.textContent = '';
+    };
+
+    const redirectToLogin = () => {
+      sessionStorage.setItem('authMsg', '请先登录后查看帖子');
+      location.href = '/login';
+    };
+
+    const getPostId = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    };
+
+    const loadPostDetail = async () => {
+      const postId = getPostId();
+      if (!postId) {
+        setMsg('帖子ID不存在', 'danger');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/post/${postId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': tokenType + ' ' + token
+          }
+        });
+        const result = await res.json().catch(() => null);
+        
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        
+        if (!res.ok || !result || result.code !== 200) {
+          const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
+          setMsg(err, 'danger');
+          return;
+        }
+
+        const post = result.data;
+        postTitle.textContent = post.title || '无标题';
+        postScore.textContent = post.score == null ? '未评分' : ('评分：' + post.score);
+        postMeta.textContent = `作者：${post.username || '未知用户'} · ${post.createdAt || ''}`;
+        postContent.textContent = post.content || '';
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
+      }
+    };
+
+    const loadComments = async () => {
+      const postId = getPostId();
+      if (!postId) return;
+
+      try {
+        const res = await fetch(`/post/${postId}/comments`, {
+          method: 'GET',
+          headers: {
+            'Authorization': tokenType + ' ' + token
+          }
+        });
+        const result = await res.json().catch(() => null);
+        
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        
+        if (!res.ok || !result || result.code !== 200) {
+          const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
+          setMsg(err, 'danger');
+          return;
+        }
+
+        const comments = result.data || [];
+        commentCount.textContent = comments.length;
+        
+        if (!comments.length) {
+          commentList.innerHTML = '<div class="text-center text-muted py-4">暂无评论，来发表第一条评论吧</div>';
+          return;
+        }
+
+        commentList.innerHTML = comments.map(comment => {
+          return (
+            '<div class="card comment-card">' +
+            '<div class="card-body">' +
+            '<div class="d-flex justify-content-between align-items-start">' +
+            '<span class="fw-medium text-sm">' + (comment.username || '未知用户') + '</span>' +
+            '<span class="text-xs text-muted">' + (comment.createdAt || '') + '</span>' +
+            '</div>' +
+            '<div class="comment-content mt-2 text-sm">' + comment.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+            '</div>' +
+            '</div>'
+          );
+        }).join('');
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
+      }
+    };
+
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const postId = getPostId();
+      if (!postId) return;
+
+      const content = commentContent.value.trim();
+      if (!content) {
+        setMsg('评论内容不能为空', 'danger');
+        return;
+      }
+
+      if (!token) {
+        redirectToLogin();
+        return;
+      }
+
+      try {
+        const res = await fetch(`/post/${postId}/comment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': tokenType + ' ' + token
+          },
+          body: JSON.stringify({ content })
+        });
+        const result = await res.json().catch(() => null);
+        
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        
+        if (!res.ok || !result || result.code !== 200) {
+          const err = (result && result.message) ? result.message : ('发表失败（' + res.status + '）');
+          setMsg(err, 'danger');
+          return;
+        }
+
+        setMsg('评论发表成功', 'success');
+        commentContent.value = '';
+        setTimeout(() => {
+          clearMsg();
+          loadComments();
+        }, 1000);
+      } catch (error) {
+        setMsg('请求失败，请稍后重试', 'danger');
+      }
+    });
+
+    // 加载数据
+    loadPostDetail();
+    loadComments();
+  })();
+</script>
+</body>
+</html>
