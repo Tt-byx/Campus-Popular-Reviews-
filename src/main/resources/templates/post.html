@@ -44,6 +44,32 @@
         <input id="score" name="score" type="number" class="form-control" min="0" max="5" step="1" placeholder="0-5" />
       </div>
 
+      <div class="mb-3">
+        <label class="form-label">标签</label>
+        <div class="d-flex flex-wrap gap-2">
+          <label class="btn btn-outline-primary btn-sm">
+            <input type="radio" name="tag" value="食堂" class="form-check-input" /> #食堂
+          </label>
+          <label class="btn btn-outline-primary btn-sm">
+            <input type="radio" name="tag" value="课程" class="form-check-input" /> #课程
+          </label>
+          <label class="btn btn-outline-primary btn-sm">
+            <input type="radio" name="tag" value="社团" class="form-check-input" /> #社团
+          </label>
+          <label class="btn btn-outline-primary btn-sm">
+            <input type="radio" name="tag" value="活动" class="form-check-input" /> #活动
+          </label>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="image" class="form-label">图片（可选）</label>
+        <input id="image" type="file" class="form-control" accept="image/*" />
+        <div id="imagePreview" class="mt-2 d-none">
+          <img id="previewImg" src="" alt="预览" class="img-fluid rounded" style="max-height: 200px;" />
+        </div>
+      </div>
+
       <div class="d-flex gap-2">
         <button id="submitBtn" type="submit" class="btn btn-primary">发布帖子</button>
         <button type="button" id="resetBtn" class="btn btn-outline-secondary">重置</button>
@@ -61,6 +87,9 @@
     const titleEl = document.getElementById('title');
     const contentEl = document.getElementById('content');
     const scoreEl = document.getElementById('score');
+    const imageEl = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
 
     const token = (localStorage.getItem('token') || '').trim();
     const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
@@ -80,21 +109,33 @@
       location.href = '/login';
     };
 
-    const authHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': tokenType + ' ' + token
-    };
-
     if (!token) {
       redirectToLogin();
       return;
     }
+
+    // 图片预览
+    imageEl.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          imagePreview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.classList.add('d-none');
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = (titleEl.value || '').trim();
       const content = (contentEl.value || '').trim();
       const scoreRaw = (scoreEl.value || '').trim();
+      const tagEl = document.querySelector('input[name="tag"]:checked');
+      const tag = tagEl ? tagEl.value : '';
 
       if (!title) return setMsg('标题不能为空', 'danger');
       if (title.length > 100) return setMsg('标题长度不能超过 100 字', 'danger');
@@ -102,16 +143,24 @@
       if (scoreRaw && Number.isNaN(Number(scoreRaw))) return setMsg('评分必须是数字', 'danger');
       if (scoreRaw && (Number(scoreRaw) < 0 || Number(scoreRaw) > 5)) return setMsg('评分范围必须在 0 到 5', 'danger');
 
-      const payload = { title, content };
-      if (scoreRaw) payload.score = Number(scoreRaw);
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      if (scoreRaw) formData.append('score', scoreRaw);
+      if (tag) formData.append('tag', tag);
+      if (imageEl.files[0]) {
+        formData.append('image', imageEl.files[0]);
+      }
 
       submitBtn.disabled = true;
       clearMsg();
       try {
         const res = await fetch('/post', {
           method: 'POST',
-          headers: authHeaders,
-          body: JSON.stringify(payload)
+          headers: {
+            'Authorization': tokenType + ' ' + token
+          },
+          body: formData
         });
         const result = await res.json().catch(() => null);
 
@@ -127,6 +176,7 @@
 
         setMsg('发布成功，正在返回帖子广场...', 'success');
         form.reset();
+        imagePreview.classList.add('d-none');
         setTimeout(() => {
           location.href = '/create-post';
         }, 500);
@@ -139,6 +189,7 @@
 
     resetBtn.addEventListener('click', () => {
       form.reset();
+      imagePreview.classList.add('d-none');
       clearMsg();
     });
   })();
