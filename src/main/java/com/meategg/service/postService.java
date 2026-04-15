@@ -6,7 +6,7 @@ import com.meategg.entity.Post;
 import com.meategg.entity.Result;
 
 public interface postService extends IService<Post> {
-    Result createPost(PostCreateRequest request, String username);
+    Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image);
 
     Result listPosts();
     

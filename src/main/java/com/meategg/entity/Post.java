@@ -31,4 +31,10 @@ public class Post {
 
     @TableField("updated_at")
     private LocalDateTime updatedAt;
+    
+    @TableField("image_url")
+    private String imageUrl;
+    
+    @TableField("tag")
+    private String tag;
 }

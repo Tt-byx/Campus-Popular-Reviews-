@@ -29,7 +29,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     private CommentMapper commentMapper;
 
     @Override
-    public Result createPost(PostCreateRequest request, String username) {
+    public Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image) {
         if (request == null) {
             return Result.fail("请求体不能为空");
         }
@@ -56,11 +56,32 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             return Result.fail(401, "当前登录用户不存在");
         }
 
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            try {
+                String originalFilename = image.getOriginalFilename();
+                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String filename = System.currentTimeMillis() + extension;
+                String uploadDir = "C:\\Users\\28182\\Desktop\\java\\Campus-Popular-Reviews-\\src\\main\\resources\\static\\uploads";
+                java.io.File dir = new java.io.File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                java.io.File dest = new java.io.File(dir, filename);
+                image.transferTo(dest);
+                imageUrl = "/uploads/" + filename;
+            } catch (Exception e) {
+                return Result.fail("文件上传失败: " + e.getMessage());
+            }
+        }
+
         Post post = new Post();
         post.setUserId(Long.valueOf(user.getId()));
         post.setTitle(request.getTitle().trim());
         post.setContent(request.getContent().trim());
         post.setScore(request.getScore());
+        post.setTag(request.getTag());
+        post.setImageUrl(imageUrl);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
         postMapper.insert(post);
@@ -70,6 +91,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("title", post.getTitle());
         data.put("content", post.getContent());
         data.put("score", post.getScore());
+        data.put("tag", post.getTag());
+        data.put("imageUrl", post.getImageUrl());
         data.put("username", username.trim());
         return Result.ok(200, "发布成功", data);
     }
@@ -104,6 +127,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("title", p.getTitle());
             item.put("content", p.getContent());
             item.put("score", p.getScore());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
             item.put("createdAt", p.getCreatedAt());
@@ -127,6 +152,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("title", post.getTitle());
         data.put("content", post.getContent());
         data.put("score", post.getScore());
+        data.put("tag", post.getTag());
+        data.put("imageUrl", post.getImageUrl());
         data.put("userId", post.getUserId());
         data.put("username", user != null ? user.getUsername() : "未知用户");
         data.put("createdAt", post.getCreatedAt());
