@@ -16,3 +16,4 @@ public interface postService extends IService<Post> {
     
     Result getCommentsByPostId(Long postId);
 }
+//
