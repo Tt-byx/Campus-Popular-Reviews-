@@ -75,9 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/register".equals(path)
                 || "/user/login".equals(path)
                 || "/user/create".equals(path)
-                || "/create-post".equals(path)
-                || "/post".equals(path)
-                || "/post-detail".equals(path)
+                ||"/post-detail".equals(path)
                 || "/error".equals(path)
                 || "/favicon.ico".equals(path)
                 || path.startsWith("/css/")
@@ -89,16 +87,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isApiRequest(HttpServletRequest request) {
         String path = request.getRequestURI();
-        if (path.startsWith("/api/") || path.startsWith("/user/") || "/post".equals(path) || path.startsWith("/post/")) {
-            return true;
-        }
-        String accept = request.getHeader("Accept");
-        if (accept != null && accept.contains("application/json")) {
-            return true;
-        }
-        String requestedWith = request.getHeader("X-Requested-With");
-        return "XMLHttpRequest".equalsIgnoreCase(requestedWith);
+        if ("/post".equals(path)) {
+        return "POST".equals(request.getMethod());
     }
+    if (path.startsWith("/api/") || path.startsWith("/user/") || path.startsWith("/post/")) {
+        return true;
+    }
+    String accept = request.getHeader("Accept");
+    if (accept != null && accept.contains("application/json")) {
+        return true;
+    }
+    String requestedWith = request.getHeader("X-Requested-With");
+    return "XMLHttpRequest".equalsIgnoreCase(requestedWith);
+}
 
     private String resolveToken(HttpServletRequest request) {
         String auth = request.getHeader("Authorization");
