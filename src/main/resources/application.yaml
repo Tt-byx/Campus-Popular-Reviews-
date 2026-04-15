@@ -1,5 +1,5 @@
 server:
-  port: 10086
+  port: 12345
 spring:
   application:
     name: gantaniangde
@@ -7,7 +7,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/hmdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: 123456
+    password: zbq060423...
   jackson:
     default-property-inclusion: non_null
 jwt:
@@ -15,6 +15,7 @@ jwt:
   expire: 86400
 mybatis-plus:
   type-aliases-package: com.meategg.entity
+  mapper-locations: classpath*:*.xml
 logging:
   level:
     com.meategg: debug
