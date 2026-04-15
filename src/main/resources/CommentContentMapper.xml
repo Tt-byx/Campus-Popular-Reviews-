@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.meategg.mapper.CommentContentMapper">
+
+    <resultMap id="BaseResultMap" type="com.meategg.entity.CommentContent">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="post_id" property="postId" jdbcType="BIGINT"/>
+        <result column="comment_id" property="commentId" jdbcType="BIGINT"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="listByPostIdAndCommentIds" resultMap="BaseResultMap">
+        SELECT *
+        FROM comment_content
+        WHERE post_id = #{postId}
+        AND comment_id IN
+        <foreach collection="commentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

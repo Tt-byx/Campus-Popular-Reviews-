@@ -2,10 +2,13 @@ package com.meategg.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.meategg.DTO.PostCreateRequest;
+import com.meategg.entity.CommentContent;
+import com.meategg.entity.CommentUser;
 import com.meategg.entity.Post;
 import com.meategg.entity.Result;
 import com.meategg.entity.User;
-import com.meategg.mapper.CommentMapper;
+import com.meategg.mapper.CommentContentMapper;
+import com.meategg.mapper.CommentUserMapper;
 import com.meategg.mapper.PostMapper;
 import com.meategg.mapper.UserMapper;
 import org.springframework.stereotype.Service;
@@ -26,7 +29,9 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     @Resource
     private UserMapper userMapper;
     @Resource
-    private CommentMapper commentMapper;
+    private CommentUserMapper commentUserMapper;
+    @Resource
+    private CommentContentMapper commentContentMapper;
 
     @Override
     public Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image) {
@@ -184,13 +189,25 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
         }
-        com.meategg.entity.Comment comment = new com.meategg.entity.Comment();
-        comment.setPostId(postId);
-        comment.setUsername(username.trim());
-        comment.setContent(content.trim());
-        comment.setCreatedAt(LocalDateTime.now());
-        commentMapper.insert(comment);
-        return Result.ok(200, "评论发表成功", null);
+        CommentUser commentUser = new CommentUser();
+        commentUser.setPostId(postId);
+        commentUser.setUsername(username.trim());
+        commentUser.setCreatedAt(LocalDateTime.now());
+        commentUserMapper.insert(commentUser);
+
+        CommentContent commentContent = new CommentContent();
+        commentContent.setPostId(postId);
+        commentContent.setCommentId(commentUser.getId());
+        commentContent.setContent(content.trim());
+        commentContentMapper.insert(commentContent);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("commentId", commentUser.getId());
+        data.put("postId", postId);
+        data.put("username", commentUser.getUsername());
+        data.put("content", commentContent.getContent());
+        data.put("createdAt", commentUser.getCreatedAt());
+        return Result.ok(200, "评论发表成功", data);
     }
 
     @Override
@@ -202,14 +219,38 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (post == null) {
             return Result.fail("帖子不存在");
         }
-        List<com.meategg.entity.Comment> comments = commentMapper.getCommentsByPostId(postId);
+        List<CommentUser> commentUsers = commentUserMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("post_id", postId)
+                        .orderByDesc("created_at")
+        );
         List<Map<String, Object>> data = new ArrayList<>();
-        for (com.meategg.entity.Comment comment : comments) {
+        if (commentUsers == null || commentUsers.isEmpty()) {
+            return Result.ok(data);
+        }
+
+        List<Long> commentIds = new ArrayList<>();
+        for (CommentUser cu : commentUsers) {
+            if (cu.getId() != null) {
+                commentIds.add(cu.getId());
+            }
+        }
+        Map<Long, String> contentMap = new HashMap<>();
+        if (!commentIds.isEmpty()) {
+            List<CommentContent> contents = commentContentMapper.listByPostIdAndCommentIds(postId, commentIds);
+            for (CommentContent cc : contents) {
+                if (cc != null && cc.getCommentId() != null) {
+                    contentMap.put(cc.getCommentId(), cc.getContent());
+                }
+            }
+        }
+
+        for (CommentUser comment : commentUsers) {
             Map<String, Object> item = new HashMap<>();
-            item.put("id", comment.getId());
+            item.put("commentId", comment.getId());
             item.put("postId", comment.getPostId());
             item.put("username", comment.getUsername());
-            item.put("content", comment.getContent());
+            item.put("content", contentMap.getOrDefault(comment.getId(), ""));
             item.put("createdAt", comment.getCreatedAt());
             data.add(item);
         }
