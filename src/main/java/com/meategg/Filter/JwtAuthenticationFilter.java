@@ -75,12 +75,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/register".equals(path)
                 || "/user/login".equals(path)
                 || "/user/create".equals(path)
+                || "/create-post".equals(path)
+                || "/post".equals(path)
+                || "/post-detail".equals(path)
                 || "/error".equals(path)
                 || "/favicon.ico".equals(path)
                 || path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
-                || path.startsWith("/webjars/");
+                || path.startsWith("/webjars/")
+                || path.startsWith("/uploads/");
     }
 
     private boolean isApiRequest(HttpServletRequest request) {
