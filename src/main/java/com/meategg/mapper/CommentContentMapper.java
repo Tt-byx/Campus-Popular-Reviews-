@@ -13,3 +13,4 @@ public interface CommentContentMapper extends BaseMapper<CommentContent> {
 
     List<CommentContent> listByPostIdAndCommentIds(@Param("postId") Long postId, @Param("commentIds") List<Long> commentIds);
 }
+//
