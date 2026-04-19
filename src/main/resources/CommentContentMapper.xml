@@ -4,15 +4,16 @@
 
     <resultMap id="BaseResultMap" type="com.meategg.entity.CommentContent">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="post_id" property="postId" jdbcType="BIGINT"/>
+        <result column="review_target_id" property="reviewTargetId" jdbcType="BIGINT"/>
         <result column="comment_id" property="commentId" jdbcType="BIGINT"/>
         <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="score" property="score" jdbcType="TINYINT"/>
     </resultMap>
 
-    <select id="listByPostIdAndCommentIds" resultMap="BaseResultMap">
+    <select id="listByReviewTargetIdAndCommentIds" resultMap="BaseResultMap">
         SELECT *
         FROM comment_content
-        WHERE post_id = #{postId}
+        WHERE review_target_id = #{reviewTargetId}
         AND comment_id IN
         <foreach collection="commentIds" item="id" open="(" separator="," close=")">
             #{id}

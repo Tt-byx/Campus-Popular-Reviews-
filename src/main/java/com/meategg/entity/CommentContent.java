@@ -12,13 +12,16 @@ public class CommentContent {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @TableField("post_id")
-    private Long postId;
+    @TableField("review_target_id")
+    private Long reviewTargetId;
 
     @TableField("comment_id")
     private Long commentId;
 
     @TableField("content")
     private String content;
+
+    @TableField("score")
+    private Integer score;
 }
 //
