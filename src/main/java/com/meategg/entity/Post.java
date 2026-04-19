@@ -23,9 +23,6 @@ public class Post {
     @TableField("content")
     private String content;
 
-    @TableField("score")
-    private Integer score;
-
     @TableField("created_at")
     private LocalDateTime createdAt;
 
