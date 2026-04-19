@@ -25,9 +25,9 @@ public class PageController {
         return "post";
     }
 
-    @GetMapping("/create-post")
+    @GetMapping("/browse-post")
     public String createPostPage() {
-        return "create-post";
+        return "browse-post";
     }
     
     @GetMapping("/post-detail")
