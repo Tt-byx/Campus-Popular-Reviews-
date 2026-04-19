@@ -20,7 +20,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h1 class="h4 title m-0">发布帖子</h1>
       <div class="d-flex gap-2">
-        <a class="btn btn-outline-primary btn-sm" href="/create-post">帖子广场</a>
+        <a class="btn btn-outline-primary btn-sm" href="/browse-post">帖子广场</a>
         <a class="btn btn-outline-secondary btn-sm" th:href="@{/login}" href="/login">登录页</a>
       </div>
     </div>
@@ -168,7 +168,7 @@
         form.reset();
         imagePreview.classList.add('d-none');
         setTimeout(() => {
-          location.href = '/create-post';
+          location.href = '/browse-post';
         }, 500);
       } catch (error) {
         setMsg('请求失败，请稍后重试', 'danger');

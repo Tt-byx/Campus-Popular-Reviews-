@@ -112,7 +112,7 @@
           persistLoginToken(result.data || null);
           setMsg('登录成功，正在跳转...', 'success');
           setTimeout(() => {
-            location.href = '/create-post';
+            location.href = '/browse-post';
           }, 500);
         } else {
           setMsg((result && result.message) ? result.message : '登录失败', 'danger');
