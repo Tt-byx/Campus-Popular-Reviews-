@@ -12,9 +12,10 @@
     .post-title { font-weight: 700; color: #0f172a; }
     .meta { color: #64748b; font-size: 13px; }
     .content { color: #334155; white-space: pre-wrap; line-height: 1.6; }
-    .comment-card { border: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(15,23,42,0.04); }
-    .comment-content { color: #475569; line-height: 1.5; }
-    .comment-input { border-radius: 12px; }
+    .target-card { border: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(15,23,42,0.04); cursor: pointer; transition: transform 0.2s; }
+    .target-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15,23,42,0.08); }
+    .target-name { font-weight: 600; color: #0f172a; font-size: 16px; }
+    .score-badge { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; }
     .btn-primary { border-radius: 12px; }
   </style>
 </head>
@@ -29,12 +30,13 @@
   </div>
 
   <div id="msg" class="alert d-none" role="alert"></div>
-  
+
   <!-- 帖子详情 -->
   <div id="postDetail" class="card post-card">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-start gap-3">
         <div class="post-title" id="postTitle">加载中...</div>
+        <div id="postTag"></div>
       </div>
       <div class="meta mt-1" id="postMeta">作者：加载中 · 加载中</div>
       <div id="postImage" class="mt-3 d-none"><img id="postImageSrc" src="" alt="帖子图片" class="img-fluid rounded" style="max-height: 300px;"></div>
@@ -42,27 +44,29 @@
     </div>
   </div>
 
-  <!-- 评论区 -->
-  <div class="mb-3">
-    <h5 class="fw-semibold">评论 ( <span id="commentCount">0</span> )</h5>
+  <!-- 评论对象列表 -->
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <h5 class="fw-semibold m-0">评论对象</h5>
+    <button id="addTargetBtn" class="btn btn-primary btn-sm">+ 添加评论对象</button>
   </div>
 
-  <!-- 评论输入 -->
-  <div class="card comment-card mb-4">
+  <!-- 添加评论对象表单 -->
+  <div id="addTargetForm" class="card mb-3 d-none">
     <div class="card-body">
-      <form id="commentForm">
+      <form id="targetForm">
         <div class="mb-2">
-          <textarea id="commentContent" class="form-control comment-input" placeholder="写下你的评论..." rows="3" required></textarea>
+          <input type="text" id="targetNameInput" class="form-control" placeholder="输入评论对象名称（如：史蒂芬·库里）" maxlength="100" required />
         </div>
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+        <div class="d-flex gap-2 justify-content-end">
+          <button type="button" id="cancelTargetBtn" class="btn btn-outline-secondary btn-sm">取消</button>
+          <button type="submit" class="btn btn-primary btn-sm">创建</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 评论列表 -->
-  <div id="commentList" class="d-grid gap-3"></div>
+  <!-- 评论对象列表 -->
+  <div id="targetList" class="d-grid gap-3"></div>
 </div>
 
 <script>
@@ -71,11 +75,13 @@
     const postTitle = document.getElementById('postTitle');
     const postMeta = document.getElementById('postMeta');
     const postContent = document.getElementById('postContent');
-    const commentCount = document.getElementById('commentCount');
-    const commentList = document.getElementById('commentList');
-    const commentForm = document.getElementById('commentForm');
-    const commentContent = document.getElementById('commentContent');
-    
+    const targetList = document.getElementById('targetList');
+    const addTargetBtn = document.getElementById('addTargetBtn');
+    const addTargetForm = document.getElementById('addTargetForm');
+    const targetForm = document.getElementById('targetForm');
+    const targetNameInput = document.getElementById('targetNameInput');
+    const cancelTargetBtn = document.getElementById('cancelTargetBtn');
+
     const token = (localStorage.getItem('token') || '').trim();
     const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
 
@@ -114,12 +120,12 @@
           }
         });
         const result = await res.json().catch(() => null);
-        
+
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
-        
+
         if (!res.ok || !result || result.code !== 200) {
           const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
           setMsg(err, 'danger');
@@ -128,9 +134,14 @@
 
         const post = result.data;
         postTitle.textContent = post.title || '无标题';
-        
+
+        const postTag = document.getElementById('postTag');
+        if (post.tag) {
+          postTag.innerHTML = '<span class="badge bg-primary text-white">#' + post.tag + '</span>';
+        }
+
         postMeta.textContent = `作者：${post.username || '未知用户'} · ${post.createdAt || ''}`;
-        
+
         const postImage = document.getElementById('postImage');
         const postImageSrc = document.getElementById('postImageSrc');
         if (post.imageUrl) {
@@ -139,56 +150,59 @@
         } else {
           postImage.classList.add('d-none');
         }
-        
+
         postContent.textContent = post.content || '';
       } catch (error) {
         setMsg('请求失败，请稍后重试', 'danger');
       }
     };
 
-    const loadComments = async () => {
+    const loadReviewTargets = async () => {
       const postId = getPostId();
       if (!postId) return;
 
       try {
-        const res = await fetch(`/post/${postId}/comments`, {
+        const res = await fetch(`/post/${postId}/review-targets`, {
           method: 'GET',
           headers: {
             'Authorization': tokenType + ' ' + token
           }
         });
         const result = await res.json().catch(() => null);
-        
+
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
-        
+
         if (!res.ok || !result || result.code !== 200) {
           const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
           setMsg(err, 'danger');
           return;
         }
 
-        const comments = result.data || [];
-        commentCount.textContent = comments.length;
-        
-        if (!comments.length) {
-          commentList.innerHTML = '<div class="text-center text-muted py-4">暂无评论，来发表第一条评论吧</div>';
+        const targets = result.data || [];
+
+        if (!targets.length) {
+          targetList.innerHTML = '<div class="text-center text-muted py-4">暂无评论对象，点击右上角添加</div>';
           return;
         }
 
-        commentList.innerHTML = comments.map(comment => {
+        targetList.innerHTML = targets.map(target => {
+          const scoreDisplay = target.avgScore != null ?
+                  `<span class="badge score-badge">⭐${target.avgScore.toFixed(1)}</span>` :
+                  '<span class="badge text-bg-light">未评分</span>';
+
           return (
-            '<div class="card comment-card">' +
-            '<div class="card-body">' +
-            '<div class="d-flex justify-content-between align-items-start">' +
-            '<span class="fw-medium text-sm">' + (comment.username || '未知用户') + '</span>' +
-            '<span class="text-xs text-muted">' + (comment.createdAt || '') + '</span>' +
-            '</div>' +
-            '<div class="comment-content mt-2 text-sm">' + comment.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-            '</div>' +
-            '</div>'
+                  '<div class="card target-card" onclick="window.location.href=\'/review-target-detail?id=' + target.id + '\'">' +
+                  '<div class="card-body">' +
+                  '<div class="d-flex justify-content-between align-items-start">' +
+                  '<div class="target-name">' + target.targetName.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                  scoreDisplay +
+                  '</div>' +
+                  '<div class="meta mt-2">' + target.commentCount + ' 条评论</div>' +
+                  '</div>' +
+                  '</div>'
           );
         }).join('');
       } catch (error) {
@@ -196,50 +210,60 @@
       }
     };
 
-    commentForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const postId = getPostId();
-      if (!postId) return;
-
-      const content = commentContent.value.trim();
-      if (!content) {
-        setMsg('评论内容不能为空', 'danger');
-        return;
-      }
-
+    addTargetBtn.addEventListener('click', () => {
       if (!token) {
         redirectToLogin();
         return;
       }
+      addTargetForm.classList.remove('d-none');
+      targetNameInput.focus();
+    });
+
+    cancelTargetBtn.addEventListener('click', () => {
+      addTargetForm.classList.add('d-none');
+      targetNameInput.value = '';
+    });
+
+    targetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const postId = getPostId();
+      if (!postId) return;
+
+      const targetName = targetNameInput.value.trim();
+      if (!targetName) {
+        setMsg('评论对象名称不能为空', 'danger');
+        return;
+      }
 
       try {
-        const res = await fetch(`/post/${postId}/comment`, {
+        const res = await fetch(`/post/${postId}/review-target`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': tokenType + ' ' + token
           },
-          body: JSON.stringify({ content })
+          body: JSON.stringify({ targetName })
         });
         const result = await res.json().catch(() => null);
-        
+
         if (res.status === 401) {
           redirectToLogin();
           return;
         }
-        
+
         if (!res.ok || !result || result.code !== 200) {
-          const err = (result && result.message) ? result.message : ('发表失败（' + res.status + '）');
+          const err = (result && result.message) ? result.message : ('创建失败（' + res.status + '）');
           setMsg(err, 'danger');
           return;
         }
 
-        setMsg('评论发表成功', 'success');
-        commentContent.value = '';
+        setMsg('创建成功', 'success');
+        targetNameInput.value = '';
+        addTargetForm.classList.add('d-none');
         setTimeout(() => {
           clearMsg();
-          loadComments();
-        }, 1000);
+          loadReviewTargets();
+        }, 500);
       } catch (error) {
         setMsg('请求失败，请稍后重试', 'danger');
       }
@@ -247,7 +271,7 @@
 
     // 加载数据
     loadPostDetail();
-    loadComments();
+    loadReviewTargets();
   })();
 </script>
 </body>

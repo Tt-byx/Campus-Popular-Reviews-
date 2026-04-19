@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class PageController {
     @GetMapping("/")
     public String homePage() {
-        return "redirect:/create-post";
+        return "redirect:/browse-post";
     }
 
     @GetMapping("/login")
@@ -26,13 +26,17 @@ public class PageController {
     }
 
     @GetMapping("/browse-post")
-    public String createPostPage() {
+    public String browsePostPage() {
         return "browse-post";
     }
-    
+
     @GetMapping("/post-detail")
     public String postDetailPage() {
         return "post-detail";
     }
+
+    @GetMapping("/review-target-detail")
+    public String reviewTargetDetailPage() {
+        return "review-target-detail";
+    }
 }
-//

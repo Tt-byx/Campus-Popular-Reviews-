@@ -11,6 +11,5 @@ import java.util.List;
 @Mapper
 public interface CommentContentMapper extends BaseMapper<CommentContent> {
 
-    List<CommentContent> listByPostIdAndCommentIds(@Param("postId") Long postId, @Param("commentIds") List<Long> commentIds);
+    List<CommentContent> listByReviewTargetIdAndCommentIds(@Param("reviewTargetId") Long reviewTargetId, @Param("commentIds") List<Long> commentIds);
 }
-//

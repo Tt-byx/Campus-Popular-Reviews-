@@ -23,11 +23,11 @@ public class PostController {
     private postService postservice;
 
     @PostMapping(value = "", consumes = "multipart/form-data")
-    public Result createPost(@RequestParam("title") String title, 
-                            @RequestParam("content") String content,
-                            @RequestParam(value = "tag", required = false) String tag, 
-                            @RequestParam(value = "image", required = false) MultipartFile image, 
-                            HttpServletRequest httpRequest) {
+    public Result createPost(@RequestParam("title") String title,
+                             @RequestParam("content") String content,
+                             @RequestParam(value = "tag", required = false) String tag,
+                             @RequestParam(value = "image", required = false) MultipartFile image,
+                             HttpServletRequest httpRequest) {
         Object usernameAttr = httpRequest.getAttribute("username");
         String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
         PostCreateRequest request = new PostCreateRequest();
@@ -41,23 +41,41 @@ public class PostController {
     public Result listPosts() {
         return postservice.listPosts();
     }
-    
+
     @GetMapping("/{id}")
     public Result getPostById(@PathVariable Long id) {
         return postservice.getPostById(id);
     }
-    
-    @PostMapping("/{id}/comment")
-    public Result addComment(@PathVariable Long id, @RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
+
+    @PostMapping("/{id}/review-target")
+    public Result createReviewTarget(@PathVariable Long id, @RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
         Object usernameAttr = httpRequest.getAttribute("username");
         String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
-        String content = request.get("content");
-        return postservice.addComment(id, username, content);
+        String targetName = request.get("targetName");
+        return postservice.createReviewTarget(id, targetName, username);
     }
-    
-    @GetMapping("/{id}/comments")
-    public Result getCommentsByPostId(@PathVariable Long id) {
-        return postservice.getCommentsByPostId(id);
+
+    @GetMapping("/{id}/review-targets")
+    public Result getReviewTargets(@PathVariable Long id) {
+        return postservice.getReviewTargetsByPostId(id);
+    }
+
+    @GetMapping("/review-target/{id}")
+    public Result getReviewTargetById(@PathVariable Long id) {
+        return postservice.getReviewTargetById(id);
+    }
+
+    @PostMapping("/review-target/{id}/comment")
+    public Result addComment(@PathVariable Long id, @RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
+        Object usernameAttr = httpRequest.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        String content = (String) request.get("content");
+        Integer score = request.get("score") != null ? ((Number) request.get("score")).intValue() : null;
+        return postservice.addComment(id, username, content, score);
+    }
+
+    @GetMapping("/review-target/{id}/comments")
+    public Result getComments(@PathVariable Long id) {
+        return postservice.getCommentsByReviewTargetId(id);
     }
 }
-//
