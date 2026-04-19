@@ -24,8 +24,7 @@ public class PostController {
 
     @PostMapping(value = "", consumes = "multipart/form-data")
     public Result createPost(@RequestParam("title") String title, 
-                            @RequestParam("content") String content, 
-                            @RequestParam(value = "score", required = false) Integer score, 
+                            @RequestParam("content") String content,
                             @RequestParam(value = "tag", required = false) String tag, 
                             @RequestParam(value = "image", required = false) MultipartFile image, 
                             HttpServletRequest httpRequest) {
@@ -34,7 +33,6 @@ public class PostController {
         PostCreateRequest request = new PostCreateRequest();
         request.setTitle(title);
         request.setContent(content);
-        request.setScore(score);
         request.setTag(tag);
         return postservice.createPost(request, username, image);
     }

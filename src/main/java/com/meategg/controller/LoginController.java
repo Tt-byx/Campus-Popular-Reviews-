@@ -13,8 +13,8 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/user")
 public class LoginController {
-@Resource
-private userService userservice;
+    @Resource
+    private userService userservice;
 
     @PostMapping("/login")
     public Result login(@RequestBody LoginRequest request) {

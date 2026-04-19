@@ -47,9 +47,6 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (request.getTitle().trim().length() > 100) {
             return Result.fail("标题长度不能超过 100 字");
         }
-        if (request.getScore() != null && (request.getScore() < 0 || request.getScore() > 5)) {
-            return Result.fail("评分范围必须在 0 到 5");
-        }
         if (username == null || username.trim().isEmpty()) {
             return Result.fail(401, "请先登录");
         }
@@ -84,7 +81,6 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         post.setUserId(Long.valueOf(user.getId()));
         post.setTitle(request.getTitle().trim());
         post.setContent(request.getContent().trim());
-        post.setScore(request.getScore());
         post.setTag(request.getTag());
         post.setImageUrl(imageUrl);
         post.setCreatedAt(LocalDateTime.now());
@@ -95,7 +91,6 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("id", post.getId());
         data.put("title", post.getTitle());
         data.put("content", post.getContent());
-        data.put("score", post.getScore());
         data.put("tag", post.getTag());
         data.put("imageUrl", post.getImageUrl());
         data.put("username", username.trim());
@@ -131,7 +126,6 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("id", p.getId());
             item.put("title", p.getTitle());
             item.put("content", p.getContent());
-            item.put("score", p.getScore());
             item.put("tag", p.getTag());
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
@@ -156,7 +150,6 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("id", post.getId());
         data.put("title", post.getTitle());
         data.put("content", post.getContent());
-        data.put("score", post.getScore());
         data.put("tag", post.getTag());
         data.put("imageUrl", post.getImageUrl());
         data.put("userId", post.getUserId());
