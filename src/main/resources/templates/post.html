@@ -99,8 +99,8 @@
     };
 
     const redirectToLogin = () => {
-      sessionStorage.setItem('authMsg', '请先登录后再发布帖子');
-      location.href = '/login';
+      localStorage.setItem('showLoginMsg', '请先登录后再发布帖子');
+      location.href = '/browse-post';
     };
 
     if (!token) {

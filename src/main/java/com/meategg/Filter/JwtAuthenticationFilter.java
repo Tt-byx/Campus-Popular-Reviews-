@@ -42,12 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String next = path;
-        String query = request.getQueryString();
-        if (query != null && !query.trim().isEmpty()) {
-            next = next + "?" + query;
-        }
-        String redirectUrl = "/login?next=" + URLEncoder.encode(next, StandardCharsets.UTF_8.name());
+        String redirectUrl = "/browse-post";
         response.sendRedirect(redirectUrl);
     }
 
@@ -58,6 +53,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         if (jwt.startsWith("Bearer ")) {
             jwt = jwt.substring(7);
+        }
+        if (jwt.trim().isEmpty()) {
+            return null;
         }
         try {
             if (jwtUtils.isExpire(jwt)) {
@@ -75,7 +73,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/register".equals(path)
                 || "/user/login".equals(path)
                 || "/user/create".equals(path)
-                ||"/post-detail".equals(path)
+                || "/post-detail".equals(path)
+                || "/browse-post".equals(path)
+                || "/review-target-detail".equals(path)
+                || "/post/list".equals(path)
+                || (path.startsWith("/post/") && !path.contains("/review-target") && !path.endsWith("/review-target"))
+                || (path.startsWith("/post/review-target/") && !path.endsWith("/comment"))
                 || "/error".equals(path)
                 || "/favicon.ico".equals(path)
                 || path.startsWith("/css/")
@@ -87,19 +90,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isApiRequest(HttpServletRequest request) {
         String path = request.getRequestURI();
-        if ("/post".equals(path)) {
-        return "POST".equals(request.getMethod());
+        String method = request.getMethod();
+
+        if ("POST".equals(method)) {
+            return "/post".equals(path)
+                    || path.startsWith("/post/")
+                    || path.startsWith("/user/");
+        }
+
+        if ("PUT".equals(method) || "DELETE".equals(method)) {
+            return true;
+        }
+
+        if (path.startsWith("/user/")) {
+            return true;
+        }
+
+        String accept = request.getHeader("Accept");
+        if (accept != null && accept.contains("application/json")) {
+            return true;
+        }
+
+        String requestedWith = request.getHeader("X-Requested-With");
+        return "XMLHttpRequest".equalsIgnoreCase(requestedWith);
     }
-    if (path.startsWith("/api/") || path.startsWith("/user/") || path.startsWith("/post/")) {
-        return true;
-    }
-    String accept = request.getHeader("Accept");
-    if (accept != null && accept.contains("application/json")) {
-        return true;
-    }
-    String requestedWith = request.getHeader("X-Requested-With");
-    return "XMLHttpRequest".equalsIgnoreCase(requestedWith);
-}
 
     private String resolveToken(HttpServletRequest request) {
         String auth = request.getHeader("Authorization");

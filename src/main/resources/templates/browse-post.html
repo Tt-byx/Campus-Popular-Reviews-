@@ -6,101 +6,306 @@
   <title>帖子广场 - 校圈</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body { background: #f8fafc; }
-    .wrap { max-width: 920px; margin: 24px auto; padding: 0 16px; }
-    .post-card { border: 0; border-radius: 14px; box-shadow: 0 8px 20px rgba(15,23,42,0.06); }
-    .post-title { font-weight: 700; color: #0f172a; }
-    .meta { color: #64748b; font-size: 13px; }
-    .content { color: #334155; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    :root {
+        --apple-bg: #f5f5f7;
+        --apple-card: #ffffff;
+        --apple-text: #1d1d1f;
+        --apple-secondary: #86868b;
+        --apple-blue: #0066cc;
+        --apple-radius: 18px;
+        --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
+    }
+    body { background: var(--apple-bg); color: var(--apple-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .wrap { max-width: 920px; margin: 40px auto; padding: 0 20px; }
+    
+    /* Apple Style Card */
+    .post-card { 
+        border: none; 
+        border-radius: var(--apple-radius); 
+        background: var(--apple-card);
+        box-shadow: var(--apple-shadow);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .post-card:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+    .post-title { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; }
+    .meta { color: var(--apple-secondary); font-size: 0.85rem; }
+    .content { color: #333; line-height: 1.5; margin-top: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    /* Apple Style Modal */
+    .modal-content { 
+        border: none; 
+        border-radius: 28px; 
+        box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    .modal-header { border: none; padding: 40px 40px 10px; flex-direction: column; align-items: center; }
+    .modal-body { padding: 20px 40px 40px; }
+    .form-control { 
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 16px;
+        transition: background 0.2s;
+    }
+    .form-control:focus { 
+        background: rgba(0, 0, 0, 0.08);
+        box-shadow: none;
+    }
+    .btn-apple { 
+        background: var(--apple-blue);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-weight: 600;
+        width: 100%;
+        transition: opacity 0.2s;
+    }
+    .btn-apple:hover { opacity: 0.9; color: white; }
+    
+    .btn-pill { border-radius: 20px; padding: 6px 16px; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 32px; height: 32px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #555; }
+    
+    .badge-apple { background: #f0f0f2; color: #666; font-weight: 500; border-radius: 8px; padding: 4px 10px; font-size: 0.75rem; border: none; }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 m-0">帖子广场</h1>
-    <div class="d-flex gap-2">
-      <a class="btn btn-primary btn-sm" href="/post">去发帖</a>
-      <a class="btn btn-outline-secondary btn-sm" href="/login">登录页</a>
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h1 class="h3 m-0 fw-bold">校圈</h1>
+        <p class="text-secondary small m-0">发现校园新动态</p>
+    </div>
+    <div class="d-flex gap-3 align-items-center" id="navButtons">
+      <!-- 动态生成 -->
     </div>
   </div>
 
   <div id="msg" class="alert d-none" role="alert"></div>
-  <div id="list" class="d-grid gap-3"></div>
+  <div id="list" class="d-grid"></div>
 </div>
 
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="fw-bold m-0">登录</h3>
+        <p class="text-secondary mt-2">欢迎回到校圈</p>
+      </div>
+      <div class="modal-body">
+        <div id="loginModalMsg" class="alert d-none mb-3 py-2 small" role="alert"></div>
+        <form id="loginForm">
+          <div class="mb-3">
+            <input type="text" id="loginUsername" class="form-control" placeholder="用户名" required>
+          </div>
+          <div class="mb-4">
+            <input type="password" id="loginPassword" class="form-control" placeholder="密码" required>
+          </div>
+          <button type="submit" class="btn btn-apple mb-3">登录</button>
+          <div class="text-center small">
+            <span class="text-secondary">还没有账号？</span>
+            <a href="javascript:void(0)" onclick="switchModal('register')" class="text-decoration-none fw-bold" style="color: var(--apple-blue);">立即注册</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="fw-bold m-0">注册</h3>
+        <p class="text-secondary mt-2">加入校圈社区</p>
+      </div>
+      <div class="modal-body">
+        <div id="registerModalMsg" class="alert d-none mb-3 py-2 small" role="alert"></div>
+        <form id="registerForm">
+          <div class="mb-3">
+            <input type="text" id="registerUsername" class="form-control" placeholder="设置用户名" required>
+          </div>
+          <div class="mb-4">
+            <input type="password" id="registerPassword" class="form-control" placeholder="设置密码 (至少6位)" required>
+          </div>
+          <button type="submit" class="btn btn-apple mb-3">注册</button>
+          <div class="text-center small">
+            <span class="text-secondary">已有账号？</span>
+            <a href="javascript:void(0)" onclick="switchModal('login')" class="text-decoration-none fw-bold" style="color: var(--apple-blue);">返回登录</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   (() => {
-    const msg = document.getElementById('msg');
     const list = document.getElementById('list');
+    const navButtons = document.getElementById('navButtons');
+    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+    
     const token = (localStorage.getItem('token') || '').trim();
     const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
+    const username = localStorage.getItem('username') || '';
 
-    const setMsg = (text, type) => {
-      msg.className = 'alert d-block alert-' + type;
-      msg.textContent = text;
+    const setMsg = (el, text, type) => {
+      if (!el) return;
+      el.className = 'alert d-block alert-' + type + ' py-2 small';
+      el.textContent = text;
     };
 
+    window.switchModal = (to) => {
+        if (to === 'register') {
+            loginModal.hide();
+            setTimeout(() => registerModal.show(), 400);
+        } else {
+            registerModal.hide();
+            setTimeout(() => loginModal.show(), 400);
+        }
+    };
+
+    window.showLoginPrompt = (msg) => {
+        loginModal.show();
+        if (msg) setMsg(document.getElementById('loginModalMsg'), msg, 'warning');
+    };
+
+    window.showRegisterPrompt = () => {
+        registerModal.show();
+    };
+
+    const handleLogout = () => {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenType');
+        localStorage.removeItem('username');
+        location.reload();
+      }
+    };
+
+    const renderNavButtons = () => {
+      if (token) {
+        navButtons.innerHTML = `
+          <button class="btn btn-primary btn-pill px-4" onclick="location.href='/post'">去发帖</button>
+          <div class="user-info ms-2">
+            <div class="user-avatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div>
+            <span class="fw-medium">${username}</span>
+            <button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="handleLogout()">退出</button>
+          </div>
+        `;
+      } else {
+        navButtons.innerHTML = `
+          <button class="btn btn-primary btn-pill px-4" onclick="showLoginPrompt('请先登录后再进行此操作')">去发帖</button>
+          <div class="vr mx-2 opacity-10"></div>
+          <button class="btn btn-outline-dark btn-pill px-4" onclick="showLoginPrompt()">登录</button>
+          <button class="btn btn-dark btn-pill px-4" onclick="showRegisterPrompt()">注册</button>
+        `;
+      }
+    };
+    window.handleLogout = handleLogout;
+
+    // Login logic
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value;
+      const modalMsg = document.getElementById('loginModalMsg');
+
+      try {
+        const res = await fetch('/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const result = await res.json();
+        if (res.ok && result.code === 200) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+          localStorage.setItem('username', result.data.username || u);
+          setMsg(modalMsg, '登录成功', 'success');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          setMsg(modalMsg, result.message || '登录失败', 'danger');
+        }
+      } catch (e) { setMsg(modalMsg, '网络请求失败', 'danger'); }
+    });
+
+    // Register logic
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('registerUsername').value.trim();
+      const p = document.getElementById('registerPassword').value;
+      const modalMsg = document.getElementById('registerModalMsg');
+
+      if (p.length < 6) return setMsg(modalMsg, '密码至少需要6位', 'danger');
+
+      try {
+        const res = await fetch('/user/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const result = await res.json();
+        if (res.ok && result.code === 200) {
+          setMsg(modalMsg, '注册成功，请登录', 'success');
+          setTimeout(() => switchModal('login'), 1200);
+        } else {
+          setMsg(modalMsg, result.message || '注册失败', 'danger');
+        }
+      } catch (e) { setMsg(modalMsg, '网络请求失败', 'danger'); }
+    });
+
     const renderList = (items) => {
-      if (!Array.isArray(items) || !items.length) {
-        list.innerHTML = '<div class="text-center text-muted py-5">暂无帖子，去发布第一条吧</div>';
+      if (!items || !items.length) {
+        list.innerHTML = '<div class="text-center text-muted py-5">暂无帖子</div>';
         return;
       }
-      list.innerHTML = items.map(item => {
-        const title = item.title || '无标题';
-        const content = item.content || '';
-        const username = item.username || '未知用户';
-        const createdAt = item.createdAt || '';
-        let cardHtml = '<div class="card post-card" style="cursor: pointer;" onclick="window.location.href=\'/post-detail?id=' + item.id + '\'">' +
-          '<div class="card-body">' +
-          '<div class="d-flex justify-content-between align-items-start gap-3">' +
-          '<div class="post-title">' + title + '</div>';
-        
-        if (item.tag) {
-          cardHtml += '<span class="badge bg-primary text-white">#' + item.tag + '</span>';
-        }
-        
-        cardHtml += '</div>' +
-          '<div class="meta mt-1">作者：' + username + ' · ' + createdAt + '</div>';
-        
-        if (item.imageUrl) {
-          cardHtml += '<div class="mt-3"><img src="' + item.imageUrl + '" alt="帖子图片" class="img-fluid rounded" style="max-height: 200px;"></div>';
-        }
-        
-        cardHtml += '<div class="content mt-3">' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-          '</div></div>';
-        
-        return cardHtml;
-      }).join('');
+      list.innerHTML = items.map(item => `
+        <div class="card post-card" onclick="location.href='/post-detail?id=${item.id}'">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="post-title">${item.title}</div>
+              ${item.tag ? `<span class="badge badge-apple">#${item.tag}</span>` : ''}
+            </div>
+            <div class="meta mt-1">作者：${item.username || '未知'} · ${item.createdAt || ''}</div>
+            ${item.imageUrl ? `<div class="mt-3"><img src="${item.imageUrl}" class="img-fluid rounded-3" style="max-height:300px;width:100%;object-fit:cover;"></div>` : ''}
+            <div class="content">${item.content}</div>
+          </div>
+        </div>
+      `).join('');
     };
 
     const load = async () => {
+      const headers = {};
+      if (token) headers['Authorization'] = `${tokenType} ${token}`;
       try {
-        const res = await fetch('/post/list', {
-          method: 'GET',
-          headers: {
-            'Authorization': tokenType + ' ' + token
-          }
-        });
-        const result = await res.json().catch(() => null);
-        if (res.status === 401) {
-          sessionStorage.setItem('authMsg', '请先登录后查看帖子');
-          location.href = '/login';
-          return;
-        }
-        if (!res.ok || !result || result.code !== 200) {
-          const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
-          setMsg(err, 'danger');
-          return;
-        }
-        renderList(result.data || []);
-      } catch (error) {
-        setMsg('请求失败，请稍后重试', 'danger');
-      }
+        const res = await fetch('/post/list', { method: 'GET', headers });
+        const result = await res.json();
+        if (result.code === 200) renderList(result.data);
+      } catch (e) { console.error(e); }
     };
 
+    renderNavButtons();
     load();
+    
+    const showLoginMsg = localStorage.getItem('showLoginMsg');
+    if (showLoginMsg) {
+      localStorage.removeItem('showLoginMsg');
+      showLoginPrompt(showLoginMsg);
+    }
   })();
 </script>
 </body>
 </html>
-1
