@@ -9,11 +9,17 @@ public interface postService extends IService<Post> {
     Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image);
 
     Result listPosts();
-    
+
     Result getPostById(Long id);
-    
-    Result addComment(Long postId, String username, String content);
-    
-    Result getCommentsByPostId(Long postId);
+
+    Result createReviewTarget(Long postId, String targetName, String username);
+
+    Result getReviewTargetsByPostId(Long postId);
+
+    Result getReviewTargetById(Long id);
+
+    Result addComment(Long reviewTargetId, String username, String content, Integer score);
+
+    Result getCommentsByReviewTargetId(Long reviewTargetId);
 }
-//
+//1

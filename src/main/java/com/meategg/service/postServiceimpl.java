@@ -6,10 +6,12 @@ import com.meategg.entity.CommentContent;
 import com.meategg.entity.CommentUser;
 import com.meategg.entity.Post;
 import com.meategg.entity.Result;
+import com.meategg.entity.ReviewTarget;
 import com.meategg.entity.User;
 import com.meategg.mapper.CommentContentMapper;
 import com.meategg.mapper.CommentUserMapper;
 import com.meategg.mapper.PostMapper;
+import com.meategg.mapper.ReviewTargetMapper;
 import com.meategg.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     private PostMapper postMapper;
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private ReviewTargetMapper reviewTargetMapper;
     @Resource
     private CommentUserMapper commentUserMapper;
     @Resource
@@ -137,6 +141,163 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     }
 
     @Override
+    public Result createReviewTarget(Long postId, String targetName, String username) {
+        if (postId == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        if (targetName == null || targetName.trim().isEmpty()) {
+            return Result.fail("评论对象名称不能为空");
+        }
+        if (targetName.trim().length() > 100) {
+            return Result.fail("评论对象名称长度不能超过100字");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail(401, "请先登录");
+        }
+
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+
+        User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
+                .eq("username", username.trim())
+                .last("limit 1"));
+        if (user == null) {
+            return Result.fail(401, "当前登录用户不存在");
+        }
+
+        ReviewTarget reviewTarget = new ReviewTarget();
+        reviewTarget.setPostId(postId);
+        reviewTarget.setTargetName(targetName.trim());
+        reviewTarget.setCreatedAt(LocalDateTime.now());
+        reviewTarget.setUpdatedAt(LocalDateTime.now());
+        reviewTargetMapper.insert(reviewTarget);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", reviewTarget.getId());
+        data.put("postId", reviewTarget.getPostId());
+        data.put("targetName", reviewTarget.getTargetName());
+        data.put("createdAt", reviewTarget.getCreatedAt());
+        return Result.ok(200, "创建成功", data);
+    }
+
+    @Override
+    public Result getReviewTargetsByPostId(Long postId) {
+        if (postId == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+
+        List<ReviewTarget> reviewTargets = reviewTargetMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                        .eq("post_id", postId)
+                        .orderByDesc("created_at")
+        );
+
+        if (reviewTargets == null || reviewTargets.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (ReviewTarget rt : reviewTargets) {
+            List<CommentUser> comments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                            .eq("review_target_id", rt.getId())
+            );
+
+            List<CommentContent> contents = commentContentMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                            .eq("review_target_id", rt.getId())
+            );
+
+            double avgScore = 0;
+            int scoreCount = 0;
+            for (CommentContent cc : contents) {
+                if (cc.getScore() != null) {
+                    avgScore += cc.getScore();
+                    scoreCount++;
+                }
+            }
+            if (scoreCount > 0) {
+                avgScore = avgScore / scoreCount;
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", rt.getId());
+            item.put("postId", rt.getPostId());
+            item.put("targetName", rt.getTargetName());
+            item.put("commentCount", comments.size());
+            item.put("avgScore", scoreCount > 0 ? avgScore : null);
+            item.put("createdAt", rt.getCreatedAt());
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result getReviewTargetById(Long id) {
+        if (id == null) {
+            return Result.fail("评论对象ID不能为空");
+        }
+        ReviewTarget reviewTarget = reviewTargetMapper.selectById(id);
+        if (reviewTarget == null) {
+            return Result.fail("评论对象不存在");
+        }
+
+        Post post = postMapper.selectById(reviewTarget.getPostId());
+
+        List<CommentUser> comments = commentUserMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", id)
+                        .orderByDesc("created_at")
+        );
+
+        List<Map<String, Object>> commentList = new ArrayList<>();
+        if (comments != null && !comments.isEmpty()) {
+            List<Long> commentIds = new ArrayList<>();
+            for (CommentUser cu : comments) {
+                if (cu.getId() != null) {
+                    commentIds.add(cu.getId());
+                }
+            }
+
+            Map<Long, CommentContent> contentMap = new HashMap<>();
+            if (!commentIds.isEmpty()) {
+                List<CommentContent> contents = commentContentMapper.listByReviewTargetIdAndCommentIds(id, commentIds);
+                for (CommentContent cc : contents) {
+                    if (cc != null && cc.getCommentId() != null) {
+                        contentMap.put(cc.getCommentId(), cc);
+                    }
+                }
+            }
+
+            for (CommentUser comment : comments) {
+                CommentContent cc = contentMap.get(comment.getId());
+                Map<String, Object> item = new HashMap<>();
+                item.put("commentId", comment.getId());
+                item.put("username", comment.getUsername());
+                item.put("content", cc != null ? cc.getContent() : "");
+                item.put("score", cc != null ? cc.getScore() : null);
+                item.put("createdAt", comment.getCreatedAt());
+                commentList.add(item);
+            }
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", reviewTarget.getId());
+        data.put("postId", reviewTarget.getPostId());
+        data.put("postTitle", post != null ? post.getTitle() : "");
+        data.put("targetName", reviewTarget.getTargetName());
+        data.put("comments", commentList);
+        data.put("createdAt", reviewTarget.getCreatedAt());
+        return Result.ok(data);
+    }
+
+    @Override
     public Result getPostById(Long id) {
         if (id == null) {
             return Result.fail("帖子ID不能为空");
@@ -159,9 +320,9 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     }
 
     @Override
-    public Result addComment(Long postId, String username, String content) {
-        if (postId == null) {
-            return Result.fail("帖子ID不能为空");
+    public Result addComment(Long reviewTargetId, String username, String content, Integer score) {
+        if (reviewTargetId == null) {
+            return Result.fail("评论对象ID不能为空");
         }
         if (username == null || username.trim().isEmpty()) {
             return Result.fail(401, "请先登录");
@@ -172,51 +333,61 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (content.trim().length() > 500) {
             return Result.fail("评论长度不能超过500字");
         }
-        Post post = postMapper.selectById(postId);
-        if (post == null) {
-            return Result.fail("帖子不存在");
+        if (score != null && (score < 0 || score > 5)) {
+            return Result.fail("评分范围必须在 0 到 5");
         }
+
+        ReviewTarget reviewTarget = reviewTargetMapper.selectById(reviewTargetId);
+        if (reviewTarget == null) {
+            return Result.fail("评论对象不存在");
+        }
+
         User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
                 .eq("username", username.trim())
                 .last("limit 1"));
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
         }
+
         CommentUser commentUser = new CommentUser();
-        commentUser.setPostId(postId);
+        commentUser.setReviewTargetId(reviewTargetId);
         commentUser.setUsername(username.trim());
         commentUser.setCreatedAt(LocalDateTime.now());
         commentUserMapper.insert(commentUser);
 
         CommentContent commentContent = new CommentContent();
-        commentContent.setPostId(postId);
+        commentContent.setReviewTargetId(reviewTargetId);
         commentContent.setCommentId(commentUser.getId());
         commentContent.setContent(content.trim());
+        commentContent.setScore(score);
         commentContentMapper.insert(commentContent);
 
         Map<String, Object> data = new HashMap<>();
         data.put("commentId", commentUser.getId());
-        data.put("postId", postId);
+        data.put("reviewTargetId", reviewTargetId);
         data.put("username", commentUser.getUsername());
         data.put("content", commentContent.getContent());
+        data.put("score", commentContent.getScore());
         data.put("createdAt", commentUser.getCreatedAt());
         return Result.ok(200, "评论发表成功", data);
     }
 
     @Override
-    public Result getCommentsByPostId(Long postId) {
-        if (postId == null) {
-            return Result.fail("帖子ID不能为空");
+    public Result getCommentsByReviewTargetId(Long reviewTargetId) {
+        if (reviewTargetId == null) {
+            return Result.fail("评论对象ID不能为空");
         }
-        Post post = postMapper.selectById(postId);
-        if (post == null) {
-            return Result.fail("帖子不存在");
+        ReviewTarget reviewTarget = reviewTargetMapper.selectById(reviewTargetId);
+        if (reviewTarget == null) {
+            return Result.fail("评论对象不存在");
         }
+
         List<CommentUser> commentUsers = commentUserMapper.selectList(
                 com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
-                        .eq("post_id", postId)
+                        .eq("review_target_id", reviewTargetId)
                         .orderByDesc("created_at")
         );
+
         List<Map<String, Object>> data = new ArrayList<>();
         if (commentUsers == null || commentUsers.isEmpty()) {
             return Result.ok(data);
@@ -228,26 +399,29 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
                 commentIds.add(cu.getId());
             }
         }
-        Map<Long, String> contentMap = new HashMap<>();
+
+        Map<Long, CommentContent> contentMap = new HashMap<>();
         if (!commentIds.isEmpty()) {
-            List<CommentContent> contents = commentContentMapper.listByPostIdAndCommentIds(postId, commentIds);
+            List<CommentContent> contents = commentContentMapper.listByReviewTargetIdAndCommentIds(reviewTargetId, commentIds);
             for (CommentContent cc : contents) {
                 if (cc != null && cc.getCommentId() != null) {
-                    contentMap.put(cc.getCommentId(), cc.getContent());
+                    contentMap.put(cc.getCommentId(), cc);
                 }
             }
         }
 
         for (CommentUser comment : commentUsers) {
+            CommentContent cc = contentMap.get(comment.getId());
             Map<String, Object> item = new HashMap<>();
             item.put("commentId", comment.getId());
-            item.put("postId", comment.getPostId());
+            item.put("reviewTargetId", comment.getReviewTargetId());
             item.put("username", comment.getUsername());
-            item.put("content", contentMap.getOrDefault(comment.getId(), ""));
+            item.put("content", cc != null ? cc.getContent() : "");
+            item.put("score", cc != null ? cc.getScore() : null);
             item.put("createdAt", comment.getCreatedAt());
             data.add(item);
         }
         return Result.ok(data);
     }
 }
-//
+//1

@@ -8,19 +8,22 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@TableName("user")
 @Data
-public class User {
+@TableName("review_target")
+public class ReviewTarget {
     @TableId(type = IdType.AUTO)
-    private Integer id;
-    
-    @TableField("username")
-    private String username;
-    
-    @TableField("password")
-    private String password;
-    
+    private Long id;
+
+    @TableField("post_id")
+    private Long postId;
+
+    @TableField("target_name")
+    private String targetName;
+
     @TableField("created_at")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }
 //1

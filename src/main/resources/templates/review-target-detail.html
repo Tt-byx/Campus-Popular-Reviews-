@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>评论对象详情 - 校圈</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body { background: #f8fafc; }
+        .wrap { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+        .card-box { border: 0; border-radius: 14px; box-shadow: 0 8px 20px rgba(15,23,42,0.06); margin-bottom: 24px; }
+        .target-name { font-weight: 700; color: #0f172a; font-size: 24px; }
+        .meta { color: #64748b; font-size: 13px; }
+        .score-badge { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; font-size: 16px; padding: 6px 12px; }
+        .comment-card { border: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(15,23,42,0.04); }
+        .comment-content { color: #475569; line-height: 1.5; }
+        .comment-input { border-radius: 12px; }
+        .btn-primary { border-radius: 12px; }
+        .star-rating { display: flex; gap: 8px; font-size: 24px; cursor: pointer; }
+        .star { color: #cbd5e1; transition: color 0.2s; }
+        .star.active { color: #fbbf24; }
+        .star:hover { color: #f59e0b; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 m-0">评论对象详情</h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary btn-sm" id="backToPostBtn" href="#">返回帖子</a>
+            <a class="btn btn-outline-secondary btn-sm" href="/login">登录页</a>
+        </div>
+    </div>
+
+    <div id="msg" class="alert d-none" role="alert"></div>
+
+    <!-- 评论对象详情 -->
+    <div class="card card-box">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <div class="target-name" id="targetName">加载中...</div>
+                    <div class="meta mt-1" id="postInfo">所属帖子：加载中</div>
+                </div>
+                <div id="avgScoreDisplay"><span class="badge text-bg-light">暂无评分</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评论区 -->
+    <div class="mb-3">
+        <h5 class="fw-semibold">评论 ( <span id="commentCount">0</span> )</h5>
+    </div>
+
+    <!-- 评论输入 -->
+    <div class="card comment-card mb-4">
+        <div class="card-body">
+            <form id="commentForm">
+                <div class="mb-2">
+                    <label class="form-label">评分（可选）</label>
+                    <div class="star-rating" id="starRating">
+                        <span class="star" data-score="1">★</span>
+                        <span class="star" data-score="2">★</span>
+                        <span class="star" data-score="3">★</span>
+                        <span class="star" data-score="4">★</span>
+                        <span class="star" data-score="5">★</span>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <textarea id="commentContent" class="form-control comment-input" placeholder="写下你的评论..." rows="3" required></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 评论列表 -->
+    <div id="commentList" class="d-grid gap-3"></div>
+</div>
+
+<script>
+    (() => {
+        const msg = document.getElementById('msg');
+        const targetName = document.getElementById('targetName');
+        const postInfo = document.getElementById('postInfo');
+        const avgScoreDisplay = document.getElementById('avgScoreDisplay');
+        const commentCount = document.getElementById('commentCount');
+        const commentList = document.getElementById('commentList');
+        const commentForm = document.getElementById('commentForm');
+        const commentContent = document.getElementById('commentContent');
+        const starRating = document.getElementById('starRating');
+        const backToPostBtn = document.getElementById('backToPostBtn');
+
+        const token = (localStorage.getItem('token') || '').trim();
+        const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
+        let selectedScore = null;
+
+        const setMsg = (text, type) => {
+            msg.className = 'alert d-block alert-' + type;
+            msg.textContent = text;
+        };
+
+        const clearMsg = () => {
+            msg.className = 'alert d-none';
+            msg.textContent = '';
+        };
+
+        const redirectToLogin = () => {
+            sessionStorage.setItem('authMsg', '请先登录后再评论');
+            location.href = '/login';
+        };
+
+        const getReviewTargetId = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        };
+
+        // 星级评分交互
+        starRating.addEventListener('click', (e) => {
+            if (e.target.classList.contains('star')) {
+                selectedScore = parseInt(e.target.dataset.score);
+                updateStarDisplay(selectedScore);
+            }
+        });
+
+        const updateStarDisplay = (score) => {
+            const stars = starRating.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < score) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        };
+
+        const loadReviewTargetDetail = async () => {
+            const targetId = getReviewTargetId();
+            if (!targetId) {
+                setMsg('评论对象ID不存在', 'danger');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/post/review-target/${targetId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': tokenType + ' ' + token
+                    }
+                });
+                const result = await res.json().catch(() => null);
+
+                if (res.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                if (!res.ok || !result || result.code !== 200) {
+                    const err = (result && result.message) ? result.message : ('加载失败（' + res.status + '）');
+                    setMsg(err, 'danger');
+                    return;
+                }
+
+                const data = result.data;
+                targetName.textContent = data.targetName || '未知对象';
+                postInfo.textContent = `所属帖子：${data.postTitle || '未知'}`;
+
+                if (data.comments && data.comments.length > 0) {
+                    const scores = data.comments.filter(c => c.score != null).map(c => c.score);
+                    if (scores.length > 0) {
+                        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                        avgScoreDisplay.innerHTML = `<span class="badge score-badge">⭐${avg.toFixed(1)}</span>`;
+                    }
+                }
+
+                backToPostBtn.href = `/post-detail?id=${data.postId}`;
+
+                const comments = data.comments || [];
+                commentCount.textContent = comments.length;
+
+                if (!comments.length) {
+                    commentList.innerHTML = '<div class="text-center text-muted py-4">暂无评论，来发表第一条评论吧</div>';
+                    return;
+                }
+
+                commentList.innerHTML = comments.map(comment => {
+                    const scoreBadge = comment.score != null ?
+                        `<span class="badge score-badge">⭐${comment.score}</span>` : '';
+
+                    return (
+                        '<div class="card comment-card">' +
+                        '<div class="card-body">' +
+                        '<div class="d-flex justify-content-between align-items-start">' +
+                        '<span class="fw-medium">' + (comment.username || '未知用户') + '</span>' +
+                        '<div class="d-flex gap-2 align-items-center">' +
+                        scoreBadge +
+                        '<span class="text-xs text-muted">' + (comment.createdAt || '') + '</span>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="comment-content mt-2">' + comment.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                        '</div>' +
+                        '</div>'
+                    );
+                }).join('');
+            } catch (error) {
+                setMsg('请求失败，请稍后重试', 'danger');
+            }
+        };
+
+        commentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const targetId = getReviewTargetId();
+            if (!targetId) return;
+
+            const content = commentContent.value.trim();
+            if (!content) {
+                setMsg('评论内容不能为空', 'danger');
+                return;
+            }
+
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+
+            try {
+                const res = await fetch(`/post/review-target/${targetId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': tokenType + ' ' + token
+                    },
+                    body: JSON.stringify({ content, score: selectedScore })
+                });
+                const result = await res.json().catch(() => null);
+
+                if (res.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                if (!res.ok || !result || result.code !== 200) {
+                    const err = (result && result.message) ? result.message : ('发表失败（' + res.status + '）');
+                    setMsg(err, 'danger');
+                    return;
+                }
+
+                setMsg('评论发表成功', 'success');
+                commentContent.value = '';
+                selectedScore = null;
+                updateStarDisplay(0);
+                setTimeout(() => {
+                    clearMsg();
+                    loadReviewTargetDetail();
+                }, 1000);
+            } catch (error) {
+                setMsg('请求失败，请稍后重试', 'danger');
+            }
+        });
+
+        // 加载数据
+        loadReviewTargetDetail();
+    })();
+</script>
+</body>
+</html>
+1
