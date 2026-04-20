@@ -14,8 +14,8 @@ public class CommentUser {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @TableField("post_id")
-    private Long postId;
+    @TableField("review_target_id")
+    private Long reviewTargetId;
 
     @TableField("username")
     private String username;
@@ -23,4 +23,4 @@ public class CommentUser {
     @TableField("created_at")
     private LocalDateTime createdAt;
 }
-//
+//1
