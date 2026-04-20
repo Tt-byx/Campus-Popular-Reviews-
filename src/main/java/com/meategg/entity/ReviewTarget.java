@@ -26,3 +26,4 @@ public class ReviewTarget {
     @TableField("updated_at")
     private LocalDateTime updatedAt;
 }
+//1
