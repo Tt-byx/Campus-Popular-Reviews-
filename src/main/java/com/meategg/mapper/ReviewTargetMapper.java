@@ -7,3 +7,4 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ReviewTargetMapper extends BaseMapper<ReviewTarget> {
 }
+//1

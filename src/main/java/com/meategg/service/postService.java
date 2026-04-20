@@ -22,3 +22,4 @@ public interface postService extends IService<Post> {
 
     Result getCommentsByReviewTargetId(Long reviewTargetId);
 }
+//1
