@@ -34,7 +34,8 @@ private JwtUtils jwtUtils;
         LoginResponse response = new LoginResponse(
             jwt,
             "Bearer",
-            jwtUtils.getExpireInSeconds()
+            jwtUtils.getExpireInSeconds(),
+            username
         );
         
         return Result.ok(200, "登录成功", response);
