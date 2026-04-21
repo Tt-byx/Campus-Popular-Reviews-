@@ -105,6 +105,7 @@
 
   <div id="addTargetForm" class="detail-card p-4 d-none mb-4">
     <form id="targetForm">
+        <label for="targetNameInput" class="visually-hidden">对象名称</label>
         <input type="text" id="targetNameInput" class="form-control mb-3" placeholder="对象名称 (如：史蒂芬·库里)" required>
         <div class="d-flex gap-2 justify-content-end">
             <button type="button" class="btn btn-light btn-pill px-4" onclick="hideAddTarget()">取消</button>
@@ -127,8 +128,8 @@
         <div class="modal-body">
           <div id="loginModalMsg" class="alert d-none mb-3 py-2 small" role="alert"></div>
           <form id="loginForm">
-            <div class="mb-3"><input type="text" id="loginUsername" class="form-control" placeholder="用户名" required></div>
-            <div class="mb-4"><input type="password" id="loginPassword" class="form-control" placeholder="密码" required></div>
+            <div class="mb-3"><label for="loginUsername" class="visually-hidden">用户名</label><input type="text" id="loginUsername" class="form-control" placeholder="用户名" required></div>
+            <div class="mb-4"><label for="loginPassword" class="visually-hidden">密码</label><input type="password" id="loginPassword" class="form-control" placeholder="密码" required></div>
             <button type="submit" class="btn btn-apple mb-3">登录</button>
             <div class="text-center small"><span class="text-secondary">还没有账号？</span><a href="javascript:void(0)" onclick="switchModal('register')" class="text-decoration-none fw-bold" style="color: var(--apple-blue);">立即注册</a></div>
           </form>
@@ -147,8 +148,8 @@
         <div class="modal-body">
           <div id="registerModalMsg" class="alert d-none mb-3 py-2 small" role="alert"></div>
           <form id="registerForm">
-            <div class="mb-3"><input type="text" id="registerUsername" class="form-control" placeholder="设置用户名" required></div>
-            <div class="mb-4"><input type="password" id="registerPassword" class="form-control" placeholder="设置密码 (至少6位)" required></div>
+            <div class="mb-3"><label for="registerUsername" class="visually-hidden">设置用户名</label><input type="text" id="registerUsername" class="form-control" placeholder="设置用户名" required></div>
+            <div class="mb-4"><label for="registerPassword" class="visually-hidden">设置密码</label><input type="password" id="registerPassword" class="form-control" placeholder="设置密码 (至少6位)" required></div>
             <button type="submit" class="btn btn-apple mb-3">注册</button>
             <div class="text-center small"><span class="text-secondary">已有账号？</span><a href="javascript:void(0)" onclick="switchModal('login')" class="text-decoration-none fw-bold" style="color: var(--apple-blue);">返回登录</a></div>
           </form>
@@ -183,7 +184,14 @@
 
     const renderNavButtons = () => {
       if (token) {
-        navButtons.innerHTML = `<div class="user-info"><div class="user-avatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span><button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="handleLogout()">退出</button></div>`;
+        navButtons.innerHTML = `<div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'"><div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span><button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="event.stopPropagation(); handleLogout()">退出</button></div>`;
+        fetch('/user/profile', { headers: { 'Authorization': `${tokenType} ${token}` } })
+          .then(res => res.json())
+          .then(res => {
+            if (res.code === 200 && res.data.avatar) {
+              document.getElementById('navAvatar').innerHTML = `<img src="${res.data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            }
+          });
       } else {
         navButtons.innerHTML = `<button class="btn btn-outline-dark btn-pill px-4" onclick="showLoginPrompt()">登录</button><button class="btn btn-dark btn-pill px-4 ms-2" onclick="showRegisterPrompt()">注册</button>`;
       }

@@ -22,5 +22,11 @@ public class User {
     
     @TableField("created_at")
     private LocalDateTime created_at;
+
+    @TableField("avatar")
+    private String avatar;
+
+    @TableField("signature")
+    private String signature;
 }
 //1

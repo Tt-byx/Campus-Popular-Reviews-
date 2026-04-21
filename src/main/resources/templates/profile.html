@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>个人中心 - 校圈</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root {
+        --apple-bg: #f5f5f7;
+        --apple-card: #ffffff;
+        --apple-text: #1d1d1f;
+        --apple-secondary: #86868b;
+        --apple-blue: #0066cc;
+        --apple-radius: 20px;
+        --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
+    }
+    body { background: var(--apple-bg); color: var(--apple-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    
+    .profile-card { 
+        border: none; 
+        border-radius: 24px; 
+        background: var(--apple-card);
+        box-shadow: var(--apple-shadow);
+        padding: 40px;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .avatar-wrapper {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #eee;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-upload-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        font-size: 10px;
+        text-align: center;
+        padding: 4px 0;
+        cursor: pointer;
+        display: none;
+    }
+    
+    .user-name { font-weight: 700; font-size: 1.75rem; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .user-signature { color: var(--apple-secondary); font-size: 1rem; }
+    
+    .edit-btn { 
+        position: absolute;
+        top: 40px;
+        right: 40px;
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    /* Tabs Style */
+    .apple-tabs {
+        display: flex;
+        gap: 30px;
+        border-bottom: 1px solid #e5e5e5;
+        margin-bottom: 24px;
+        padding-bottom: 10px;
+    }
+    .tab-item {
+        color: var(--apple-secondary);
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    .tab-item.active { color: var(--apple-text); }
+    .tab-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -11px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--apple-text);
+    }
+    
+    .content-card {
+        border: none; 
+        border-radius: var(--apple-radius); 
+        background: var(--apple-card);
+        box-shadow: var(--apple-shadow);
+        padding: 24px;
+        margin-bottom: 16px;
+        transition: transform 0.2s;
+    }
+    .content-card:hover { transform: translateY(-2px); }
+    
+    .form-control-apple {
+        background: #f5f5f7;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+    }
+    .form-control-apple:focus { box-shadow: none; background: #eee; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mb-5">
+    <a href="/browse-post" class="btn btn-light btn-pill px-4" style="border-radius: 20px; font-weight: 500;">← 返回主页</a>
+  </div>
+
+  <div class="profile-card">
+    <button id="editBtn" class="btn btn-outline-dark edit-btn">编辑资料</button>
+    <div id="saveCancelGroup" class="d-none" style="position: absolute; top: 40px; right: 40px;">
+        <button id="saveBtn" class="btn btn-primary btn-sm rounded-pill px-3 me-2">保存</button>
+        <button id="cancelBtn" class="btn btn-light btn-sm rounded-pill px-3">取消</button>
+    </div>
+
+    <div class="avatar-wrapper">
+        <img id="userAvatar" src="" alt="头像">
+        <label for="avatarInput" class="avatar-upload-label" id="avatarLabel">更换头像</label>
+        <input type="file" id="avatarInput" class="d-none" accept="image/*">
+    </div>
+
+    <div id="displayMode">
+        <div class="user-name" id="userNameDisplay">加载中...</div>
+        <div class="user-signature" id="userSignatureDisplay">这个人很懒，什么都没留下</div>
+    </div>
+
+    <div id="editMode" class="d-none" style="max-width: 300px;">
+        <label for="userNameInput" class="visually-hidden">用户名</label>
+        <input type="text" id="userNameInput" class="form-control form-control-apple" placeholder="用户名">
+        <label for="userSignatureInput" class="visually-hidden">个性签名</label>
+        <textarea id="userSignatureInput" class="form-control form-control-apple" placeholder="个性签名" rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="apple-tabs">
+    <div class="tab-item active" data-tab="posts">我的帖子</div>
+    <div class="tab-item" data-tab="comments">我的评论</div>
+  </div>
+
+  <div id="tabContent">
+    <div id="postsList" class="d-grid gap-3"></div>
+    <div id="commentsList" class="d-grid gap-3 d-none"></div>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const token = localStorage.getItem('token');
+    const tokenType = localStorage.getItem('tokenType') || 'Bearer';
+    const username = localStorage.getItem('username');
+
+    if (!token) {
+        localStorage.setItem('showLoginMsg', '请先登录后再访问个人中心');
+        location.href = '/browse-post';
+        return;
+    }
+
+    let currentUserData = null;
+
+    const loadProfile = async () => {
+        try {
+            const res = await fetch('/user/profile', {
+                headers: { 'Authorization': `${tokenType} ${token}` }
+            });
+            const result = await res.json();
+            if (result.code === 200) {
+                currentUserData = result.data;
+                renderProfile();
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    const renderProfile = () => {
+        document.getElementById('userAvatar').src = currentUserData.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(currentUserData.username);
+        document.getElementById('userNameDisplay').textContent = currentUserData.username;
+        document.getElementById('userSignatureDisplay').textContent = currentUserData.signature || '这个人很懒，什么都没留下';
+        
+        document.getElementById('userNameInput').value = currentUserData.username;
+        document.getElementById('userSignatureInput').value = currentUserData.signature || '';
+    };
+
+    const loadUserPosts = async () => {
+        try {
+            const res = await fetch('/post/user/posts', {
+                headers: { 'Authorization': `${tokenType} ${token}` }
+            });
+            const result = await res.json();
+            const list = document.getElementById('postsList');
+            if (result.code === 200 && result.data.length) {
+                list.innerHTML = result.data.map(p => `
+                    <div class="content-card" onclick="location.href='/post-detail?id=${p.id}'" style="cursor:pointer">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold m-0">${p.title}</h5>
+                            ${p.tag ? `<span class="badge bg-light text-secondary">#${p.tag}</span>` : ''}
+                        </div>
+                        <div class="text-secondary small mb-3">${p.createdAt}</div>
+                        <div class="text-muted" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.content}</div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="text-center text-muted py-5">暂无发布的帖子</div>';
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    const loadUserComments = async () => {
+        try {
+            const res = await fetch('/post/user/comments', {
+                headers: { 'Authorization': `${tokenType} ${token}` }
+            });
+            const result = await res.json();
+            const list = document.getElementById('commentsList');
+            if (result.code === 200 && result.data.length) {
+                list.innerHTML = result.data.map(c => `
+                    <div class="content-card">
+                        <div class="mb-2">
+                            <span class="text-secondary small">在 </span>
+                            <a href="/post-detail?id=${c.postId}" class="text-decoration-none fw-bold" style="color:var(--apple-blue)">${c.postTitle}</a>
+                            <span class="text-secondary small"> 下评论：</span>
+                        </div>
+                        <div class="mb-2">${c.content}</div>
+                        <div class="text-secondary small">${c.createdAt}</div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="text-center text-muted py-5">暂无发表的评论</div>';
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    // Edit logic
+    const editBtn = document.getElementById('editBtn');
+    const saveCancelGroup = document.getElementById('saveCancelGroup');
+    const displayMode = document.getElementById('displayMode');
+    const editMode = document.getElementById('editMode');
+    const avatarLabel = document.getElementById('avatarLabel');
+
+    editBtn.onclick = () => {
+        editBtn.classList.add('d-none');
+        saveCancelGroup.classList.remove('d-none');
+        displayMode.classList.add('d-none');
+        editMode.classList.remove('d-none');
+        avatarLabel.style.display = 'block';
+    };
+
+    const exitEdit = () => {
+        editBtn.classList.remove('d-none');
+        saveCancelGroup.classList.add('d-none');
+        displayMode.classList.remove('d-none');
+        editMode.classList.add('d-none');
+        avatarLabel.style.display = 'none';
+        renderProfile();
+    };
+
+    document.getElementById('cancelBtn').onclick = exitEdit;
+
+    document.getElementById('saveBtn').onclick = async () => {
+        const newName = document.getElementById('userNameInput').value.trim();
+        const newSig = document.getElementById('userSignatureInput').value.trim();
+        const avatarImg = document.getElementById('userAvatar').src;
+
+        try {
+            const res = await fetch('/user/profile/update', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `${tokenType} ${token}`
+                },
+                body: JSON.stringify({
+                    username: newName,
+                    signature: newSig,
+                    avatar: avatarImg.startsWith('data:') ? null : avatarImg
+                })
+            });
+            const result = await res.json();
+            if (result.code === 200) {
+                const data = result.data;
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('tokenType', data.tokenType || 'Bearer');
+                    localStorage.setItem('username', data.username || newName);
+                } else if (newName !== currentUserData.username) {
+                    localStorage.setItem('username', newName);
+                }
+                currentUserData = data.user || data;
+                exitEdit();
+                loadUserPosts();
+                loadUserComments();
+            } else {
+                alert(result.message);
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    // Avatar upload preview
+    document.getElementById('avatarInput').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const avatarImg = document.getElementById('userAvatar');
+        const avatarLabel = document.getElementById('avatarLabel');
+        const originalSrc = avatarImg.src;
+
+        avatarLabel.textContent = '上传中...';
+        avatarLabel.style.pointerEvents = 'none';
+        avatarImg.style.opacity = '0.6';
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch('/user/profile/avatar', {
+                method: 'POST',
+                headers: { 'Authorization': `${tokenType} ${token}` },
+                body: formData
+            });
+            const result = await res.json();
+            if (result.code === 200) {
+                avatarImg.src = result.data;
+                avatarLabel.textContent = '更换头像';
+            } else {
+                alert(result.message || '头像上传失败');
+                avatarImg.src = originalSrc;
+            }
+        } catch (e) {
+            console.error(e);
+            alert('网络错误，头像上传失败');
+            avatarImg.src = originalSrc;
+        } finally {
+            avatarLabel.style.pointerEvents = '';
+            avatarImg.style.opacity = '1';
+        }
+    };
+
+    // Tabs logic
+    document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const target = tab.dataset.tab;
+            if (target === 'posts') {
+                document.getElementById('postsList').classList.remove('d-none');
+                document.getElementById('commentsList').classList.add('d-none');
+            } else {
+                document.getElementById('postsList').classList.add('d-none');
+                document.getElementById('commentsList').classList.remove('d-none');
+            }
+        };
+    });
+
+    loadProfile();
+    loadUserPosts();
+    loadUserComments();
+  })();
+</script>
+</body>
+</html>

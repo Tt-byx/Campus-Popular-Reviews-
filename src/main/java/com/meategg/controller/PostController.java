@@ -78,5 +78,25 @@ public class PostController {
     public Result getComments(@PathVariable Long id) {
         return postservice.getCommentsByReviewTargetId(id);
     }
+
+    @GetMapping("/user/posts")
+    public Result getUserPosts(HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.listUserPosts(username);
+    }
+
+    @GetMapping("/user/comments")
+    public Result getUserComments(HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.listUserComments(username);
+    }
 }
 //1
