@@ -36,6 +36,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     private CommentUserMapper commentUserMapper;
     @Resource
     private CommentContentMapper commentContentMapper;
+    @Resource
+    private OssService ossService;
 
     @Override
     public Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image) {
@@ -65,17 +67,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
             try {
-                String originalFilename = image.getOriginalFilename();
-                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                String filename = System.currentTimeMillis() + extension;
-                String uploadDir = "C:\\Users\\28182\\Desktop\\java\\Campus-Popular-Reviews-\\src\\main\\resources\\static\\uploads";
-                java.io.File dir = new java.io.File(uploadDir);
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-                java.io.File dest = new java.io.File(dir, filename);
-                image.transferTo(dest);
-                imageUrl = "/uploads/" + filename;
+                imageUrl = ossService.uploadPostImage(image);
             } catch (Exception e) {
                 return Result.fail("文件上传失败: " + e.getMessage());
             }
@@ -108,10 +100,10 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             return Result.ok(new ArrayList<>());
         }
 
-        Set<Long> userIds = new HashSet<>();
+        Set<Integer> userIds = new HashSet<>();
         for (Post p : posts) {
             if (p.getUserId() != null) {
-                userIds.add(p.getUserId());
+                userIds.add(p.getUserId().intValue());
             }
         }
         Map<Long, String> usernameMap = new HashMap<>();
@@ -419,6 +411,110 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("content", cc != null ? cc.getContent() : "");
             item.put("score", cc != null ? cc.getScore() : null);
             item.put("createdAt", comment.getCreatedAt());
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result listUserPosts(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail("用户名不能为空");
+        }
+        User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query().eq("username", username.trim()).last("limit 1"));
+        if (user == null) {
+            return Result.fail("用户不存在");
+        }
+
+        List<Post> posts = postMapper.selectList(com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                .eq("user_id", user.getId())
+                .orderByDesc("created_at"));
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Post p : posts) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("username", username.trim());
+            item.put("createdAt", p.getCreatedAt());
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result listUserComments(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail("用户名不能为空");
+        }
+        User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query().eq("username", username.trim()).last("limit 1"));
+        if (user == null) {
+            return Result.fail("用户不存在");
+        }
+
+        List<CommentUser> commentUsers = commentUserMapper.selectList(com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                .eq("username", username.trim())
+                .orderByDesc("created_at"));
+
+        if (commentUsers.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        List<Long> commentIds = new ArrayList<>();
+        Set<Long> targetIds = new HashSet<>();
+        for (CommentUser cu : commentUsers) {
+            if (cu.getId() != null) {
+                commentIds.add(cu.getId());
+            }
+            if (cu.getReviewTargetId() != null) {
+                targetIds.add(cu.getReviewTargetId());
+            }
+        }
+
+        Map<Long, CommentContent> contentMap = new HashMap<>();
+        if (!commentIds.isEmpty()) {
+            List<CommentContent> contents = commentContentMapper.selectList(com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query().in("comment_id", commentIds));
+            for (CommentContent cc : contents) {
+                contentMap.put(cc.getCommentId(), cc);
+            }
+        }
+
+        Map<Long, ReviewTarget> targetMap = new HashMap<>();
+        Set<Long> postIds = new HashSet<>();
+        if (!targetIds.isEmpty()) {
+            List<ReviewTarget> targets = reviewTargetMapper.selectBatchIds(targetIds);
+            for (ReviewTarget rt : targets) {
+                targetMap.put(rt.getId(), rt);
+                postIds.add(rt.getPostId());
+            }
+        }
+
+        Map<Long, String> postTitleMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            List<Post> posts = postMapper.selectBatchIds(postIds);
+            for (Post p : posts) {
+                postTitleMap.put(p.getId(), p.getTitle());
+            }
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (CommentUser cu : commentUsers) {
+            CommentContent cc = contentMap.get(cu.getId());
+            Map<String, Object> item = new HashMap<>();
+            item.put("commentId", cu.getId());
+            item.put("content", cc != null ? cc.getContent() : "");
+            item.put("score", cc != null ? cc.getScore() : null);
+            item.put("createdAt", cu.getCreatedAt());
+            
+            ReviewTarget target = targetMap.get(cu.getReviewTargetId());
+            if (target != null) {
+                item.put("targetName", target.getTargetName());
+                item.put("postId", target.getPostId());
+                item.put("postTitle", postTitleMap.getOrDefault(target.getPostId(), "未知帖子"));
+            }
             data.add(item);
         }
         return Result.ok(data);

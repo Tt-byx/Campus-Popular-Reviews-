@@ -39,5 +39,10 @@ public class PageController {
     public String reviewTargetDetailPage() {
         return "review-target-detail";
     }
+
+    @GetMapping("/profile")
+    public String profilePage() {
+        return "profile";
+    }
 }
 //1

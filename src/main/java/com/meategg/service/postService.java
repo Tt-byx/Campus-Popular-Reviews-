@@ -21,5 +21,9 @@ public interface postService extends IService<Post> {
     Result addComment(Long reviewTargetId, String username, String content, Integer score);
 
     Result getCommentsByReviewTargetId(Long reviewTargetId);
+
+    Result listUserPosts(String username);
+
+    Result listUserComments(String username);
 }
 //1
