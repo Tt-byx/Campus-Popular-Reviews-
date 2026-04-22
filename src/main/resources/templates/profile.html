@@ -54,6 +54,16 @@
     
     .user-name { font-weight: 700; font-size: 1.75rem; letter-spacing: -0.02em; margin-bottom: 4px; }
     .user-signature { color: var(--apple-secondary); font-size: 1rem; }
+    .field-label {
+        display: inline-block;
+        color: var(--apple-secondary);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+    }
+    .field-value { margin-bottom: 16px; }
     
     .edit-btn { 
         position: absolute;
@@ -110,12 +120,54 @@
         margin-bottom: 10px;
     }
     .form-control-apple:focus { box-shadow: none; background: #eee; }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--apple-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    .back-btn:hover {
+        color: var(--apple-blue);
+        background: rgba(0, 102, 204, 0.06);
+        text-decoration: none;
+    }
+    .score-badge { background: #ff9500; color: white; border-radius: 8px; padding: 2px 10px; font-size: 0.85rem; font-weight: 600; }
+    
+    .avatar-wrapper { cursor: zoom-in; transition: opacity 0.2s; }
+    .avatar-wrapper:hover { opacity: 0.85; }
+
+    .lightbox {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.75);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+    }
+    .lightbox.show { display: flex; }
+    .lightbox img {
+        max-width: 85vw;
+        max-height: 85vh;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        object-fit: contain;
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="mb-5">
-    <a href="/browse-post" class="btn btn-light btn-pill px-4" style="border-radius: 20px; font-weight: 500;">← 返回主页</a>
+    <a href="/browse-post" class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> 返回广场</a>
   </div>
 
   <div class="profile-card">
@@ -132,27 +184,43 @@
     </div>
 
     <div id="displayMode">
-        <div class="user-name" id="userNameDisplay">加载中...</div>
-        <div class="user-signature" id="userSignatureDisplay">这个人很懒，什么都没留下</div>
+        <div class="field-value">
+            <div class="field-label">昵称</div>
+            <div class="user-name" id="userNameDisplay">加载中...</div>
+        </div>
+        <div class="field-value">
+            <div class="field-label">个性签名</div>
+            <div class="user-signature" id="userSignatureDisplay">这个人很懒，什么都没留下</div>
+        </div>
     </div>
 
-    <div id="editMode" class="d-none" style="max-width: 300px;">
-        <label for="userNameInput" class="visually-hidden">用户名</label>
-        <input type="text" id="userNameInput" class="form-control form-control-apple" placeholder="用户名">
-        <label for="userSignatureInput" class="visually-hidden">个性签名</label>
-        <textarea id="userSignatureInput" class="form-control form-control-apple" placeholder="个性签名" rows="2"></textarea>
+    <div id="editMode" class="d-none" style="max-width: 360px;">
+        <div class="mb-3">
+            <label for="userNameInput" class="form-label field-label mb-1">昵称</label>
+            <input type="text" id="userNameInput" class="form-control form-control-apple" placeholder="输入你的昵称">
+        </div>
+        <div class="mb-3">
+            <label for="userSignatureInput" class="form-label field-label mb-1">个性签名</label>
+            <textarea id="userSignatureInput" class="form-control form-control-apple" placeholder="写点什么介绍自己..." rows="2"></textarea>
+        </div>
     </div>
   </div>
 
   <div class="apple-tabs">
     <div class="tab-item active" data-tab="posts">我的帖子</div>
     <div class="tab-item" data-tab="comments">我的评论</div>
+    <div class="tab-item" data-tab="targets">评论对象</div>
   </div>
 
   <div id="tabContent">
     <div id="postsList" class="d-grid gap-3"></div>
     <div id="commentsList" class="d-grid gap-3 d-none"></div>
+    <div id="targetsList" class="d-grid gap-3 d-none"></div>
   </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img src="" alt="头像大图" id="lightboxImg">
 </div>
 
 <script>
@@ -201,6 +269,7 @@
             if (result.code === 200 && result.data.length) {
                 list.innerHTML = result.data.map(p => `
                     <div class="content-card" onclick="location.href='/post-detail?id=${p.id}'" style="cursor:pointer">
+                        ${p.imageUrl ? `<div class="mb-3"><img src="${p.imageUrl}" alt="${p.title}" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;display:block;"></div>` : ''}
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="fw-bold m-0">${p.title}</h5>
                             ${p.tag ? `<span class="badge bg-light text-secondary">#${p.tag}</span>` : ''}
@@ -304,27 +373,28 @@
         } catch (e) { console.error(e); }
     };
 
-    // Avatar upload preview
+    // Avatar upload (simple, no crop)
     document.getElementById('avatarInput').onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const f = e.target.files[0];
+        if (!f) return;
+        if (!f.type.startsWith('image/')) { alert('请选择图片文件'); return; }
+        e.target.value = '';
 
         const avatarImg = document.getElementById('userAvatar');
         const avatarLabel = document.getElementById('avatarLabel');
-        const originalSrc = avatarImg.src;
+        const origSrc = avatarImg.src;
 
         avatarLabel.textContent = '上传中...';
         avatarLabel.style.pointerEvents = 'none';
-        avatarImg.style.opacity = '0.6';
 
-        const formData = new FormData();
-        formData.append('image', file);
+        const fd = new FormData();
+        fd.append('image', f);
 
         try {
             const res = await fetch('/user/profile/avatar', {
                 method: 'POST',
                 headers: { 'Authorization': `${tokenType} ${token}` },
-                body: formData
+                body: fd
             });
             const result = await res.json();
             if (result.code === 200) {
@@ -332,17 +402,26 @@
                 avatarLabel.textContent = '更换头像';
             } else {
                 alert(result.message || '头像上传失败');
-                avatarImg.src = originalSrc;
+                avatarImg.src = origSrc;
             }
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
+            console.error(err);
             alert('网络错误，头像上传失败');
-            avatarImg.src = originalSrc;
+            avatarImg.src = origSrc;
         } finally {
             avatarLabel.style.pointerEvents = '';
-            avatarImg.style.opacity = '1';
         }
     };
+
+    // Lightbox - click avatar to view large
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    document.getElementById('userAvatar').onclick = () => {
+        if (document.getElementById('avatarLabel').style.display === 'block') return;
+        lightboxImg.src = document.getElementById('userAvatar').src;
+        lightbox.classList.add('show');
+    };
+    lightbox.onclick = () => { lightbox.classList.remove('show'); };
 
     // Tabs logic
     document.querySelectorAll('.tab-item').forEach(tab => {
@@ -350,19 +429,50 @@
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             const target = tab.dataset.tab;
+            document.getElementById('postsList').classList.add('d-none');
+            document.getElementById('commentsList').classList.add('d-none');
+            document.getElementById('targetsList').classList.add('d-none');
             if (target === 'posts') {
                 document.getElementById('postsList').classList.remove('d-none');
-                document.getElementById('commentsList').classList.add('d-none');
-            } else {
-                document.getElementById('postsList').classList.add('d-none');
+            } else if (target === 'comments') {
                 document.getElementById('commentsList').classList.remove('d-none');
+            } else if (target === 'targets') {
+                document.getElementById('targetsList').classList.remove('d-none');
             }
         };
     });
 
+    const loadUserReviewTargets = async () => {
+        try {
+            const res = await fetch('/post/user/review-targets', {
+                headers: { 'Authorization': `${tokenType} ${token}` }
+            });
+            const result = await res.json();
+            const list = document.getElementById('targetsList');
+            if (result.code === 200 && result.data.length) {
+                list.innerHTML = result.data.map(t => `
+                    <div class="content-card" onclick="location.href='/review-target-detail?id=${t.id}'" style="cursor:pointer">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h5 class="fw-bold m-0">${t.targetName}</h5>
+                                <span class="text-secondary small">来自 </span>
+                                <a href="/post-detail?id=${t.postId}" class="text-decoration-none" style="color:var(--apple-blue)" onclick="event.stopPropagation()">${t.postTitle}</a>
+                            </div>
+                            ${t.avgScore != null && t.avgScore !== '' ? `<div class="score-badge">★ ${Number(t.avgScore).toFixed(1)}</div>` : '<div class="text-muted small" style="background:#f0f0f2;border-radius:8px;padding:2px 8px;font-size:0.85rem;">暂未评分</div>'}
+                        </div>
+                        <div class="text-secondary small">我评论了 ${t.commentCount} 次</div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="text-center text-muted py-5">暂无评论过的对象</div>';
+            }
+        } catch (e) { console.error(e); }
+    };
+
     loadProfile();
     loadUserPosts();
     loadUserComments();
+    loadUserReviewTargets();
   })();
 </script>
 </body>
