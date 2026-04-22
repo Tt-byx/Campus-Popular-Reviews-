@@ -519,5 +519,104 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         }
         return Result.ok(data);
     }
+
+    @Override
+    public Result listUserReviewTargets(String username) {
+        List<CommentUser> userComments = commentUserMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("username", username)
+        );
+
+        if (userComments == null || userComments.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        Set<Long> targetIds = new HashSet<>();
+        for (CommentUser cu : userComments) {
+            if (cu.getReviewTargetId() != null) {
+                targetIds.add(cu.getReviewTargetId());
+            }
+        }
+
+        if (targetIds.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        List<ReviewTarget> targets = reviewTargetMapper.selectBatchIds(targetIds);
+        Map<Long, ReviewTarget> targetMap = new HashMap<>();
+        Set<Long> postIds = new HashSet<>();
+        for (ReviewTarget rt : targets) {
+            targetMap.put(rt.getId(), rt);
+            postIds.add(rt.getPostId());
+        }
+
+        Map<Long, String> postTitleMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            List<Post> posts = postMapper.selectBatchIds(postIds);
+            for (Post p : posts) {
+                postTitleMap.put(p.getId(), p.getTitle());
+            }
+        }
+
+        Map<Long, Integer> targetCommentCount = new HashMap<>();
+        Map<Long, Double> targetScoreSum = new HashMap<>();
+        Map<Long, Integer> targetScoreCount = new HashMap<>();
+
+        List<Long> commentIds = new ArrayList<>();
+        for (CommentUser cu : userComments) {
+            if (cu.getId() != null) commentIds.add(cu.getId());
+            Long tid = cu.getReviewTargetId();
+            if (tid != null) {
+                targetCommentCount.merge(tid, 1, Integer::sum);
+            }
+        }
+
+        if (!commentIds.isEmpty()) {
+            List<CommentContent> contents = commentContentMapper.listByReviewTargetIdAndCommentIds(null, commentIds);
+            if (contents != null) {
+                for (CommentContent cc : contents) {
+                    CommentUser matchingCu = null;
+                    for (CommentUser cu : userComments) {
+                        if (cu.getId() != null && cu.getId().equals(cc.getCommentId())) {
+                            matchingCu = cu;
+                            break;
+                        }
+                    }
+                    if (matchingCu != null && matchingCu.getReviewTargetId() != null && cc.getScore() != null) {
+                        Long tid = matchingCu.getReviewTargetId();
+                        targetScoreSum.merge(tid, (double) cc.getScore(), Double::sum);
+                        targetScoreCount.merge(tid, 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (ReviewTarget rt : targets) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", rt.getId());
+            item.put("targetName", rt.getTargetName());
+            item.put("postId", rt.getPostId());
+            item.put("postTitle", postTitleMap.getOrDefault(rt.getPostId(), "未知帖子"));
+            item.put("commentCount", targetCommentCount.getOrDefault(rt.getId(), 0));
+            
+            Integer sc = targetScoreCount.get(rt.getId());
+            if (sc != null && sc > 0) {
+                double avg = targetScoreSum.get(rt.getId()) / sc;
+                item.put("avgScore", Math.round(avg * 10.0) / 10.0);
+            } else {
+                item.put("avgScore", null);
+            }
+            data.add(item);
+        }
+
+        data.sort((a, b) -> {
+            Integer ca = (Integer) a.get("commentCount");
+            Integer cb = (Integer) b.get("commentCount");
+            return cb.compareTo(ca);
+        });
+
+        return Result.ok(data);
+    }
 }
 //1

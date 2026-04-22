@@ -12,6 +12,53 @@
     .title { font-weight: 700; color: #0f172a; margin-bottom: 16px; }
     .helper { color: #64748b; font-size: 14px; margin-bottom: 20px; }
     textarea { min-height: 220px; resize: vertical; }
+
+    .image-upload-zone {
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .image-upload-zone:hover {
+      border-color: var(--apple-blue, #0066cc);
+      background: rgba(0, 102, 204, 0.03);
+    }
+    .image-upload-zone.has-image {
+      border-style: solid;
+      border-color: #10b981;
+      padding: 8px;
+    }
+    .image-upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .upload-placeholder {
+      color: #9ca3af;
+      font-size: 14px;
+    }
+    .upload-placeholder svg {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+    #previewImg {
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 8px;
+      width: 100%;
+    }
+    .image-hint {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -58,10 +105,18 @@
       </div>
 
       <div class="mb-3">
-        <label for="image" class="form-label">图片（可选）</label>
-        <input id="image" type="file" class="form-control" accept="image/*" />
-        <div id="imagePreview" class="mt-2 d-none">
-          <img id="previewImg" src="" alt="预览" class="img-fluid rounded" style="max-height: 200px;" />
+        <label class="form-label">配图（可选，仅支持图片）</label>
+        <div class="image-upload-zone" id="imageUploadZone">
+          <div id="uploadPlaceholder" class="upload-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <div>点击或拖拽上传图片</div>
+            <div class="image-hint">支持 JPG / PNG / GIF / WebP，最大 10MB</div>
+          </div>
+          <img id="previewImg" src="" alt="预览" class="d-none">
+          <input id="image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" />
         </div>
       </div>
 
@@ -109,18 +164,41 @@
     }
 
     // 图片预览
+    const uploadZone = document.getElementById('imageUploadZone');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024;
+
     imageEl.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          previewImg.src = e.target.result;
-          imagePreview.classList.remove('d-none');
-        };
-        reader.readAsDataURL(file);
-      } else {
-        imagePreview.classList.add('d-none');
+      if (!file) {
+        previewImg.classList.add('d-none');
+        uploadPlaceholder.classList.remove('d-none');
+        uploadZone.classList.remove('has-image');
+        return;
       }
+
+      if (!allowedTypes.includes(file.type)) {
+        setMsg('仅支持 JPG / PNG / GIF / WebP 格式的图片', 'danger');
+        imageEl.value = '';
+        return;
+      }
+      if (file.size > maxSize) {
+        setMsg('图片大小不能超过 10MB', 'danger');
+        imageEl.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.classList.remove('d-none');
+        uploadPlaceholder.classList.add('d-none');
+        uploadZone.classList.add('has-image');
+        clearMsg();
+      };
+      reader.readAsDataURL(file);
     });
 
     form.addEventListener('submit', async (e) => {
@@ -166,7 +244,9 @@
 
         setMsg('发布成功，正在返回帖子广场...', 'success');
         form.reset();
-        imagePreview.classList.add('d-none');
+        previewImg.classList.add('d-none');
+        uploadPlaceholder.classList.remove('d-none');
+        uploadZone.classList.remove('has-image');
         setTimeout(() => {
           location.href = '/browse-post';
         }, 500);
@@ -179,7 +259,9 @@
 
     resetBtn.addEventListener('click', () => {
       form.reset();
-      imagePreview.classList.add('d-none');
+      previewImg.classList.add('d-none');
+      uploadPlaceholder.classList.remove('d-none');
+      uploadZone.classList.remove('has-image');
       clearMsg();
     });
   })();

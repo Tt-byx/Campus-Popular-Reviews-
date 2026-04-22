@@ -25,5 +25,7 @@ public interface postService extends IService<Post> {
     Result listUserPosts(String username);
 
     Result listUserComments(String username);
+
+    Result listUserReviewTargets(String username);
 }
 //1

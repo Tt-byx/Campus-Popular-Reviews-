@@ -28,6 +28,13 @@ public class PostController {
                              @RequestParam(value = "tag", required = false) String tag,
                              @RequestParam(value = "image", required = false) MultipartFile image,
                              HttpServletRequest httpRequest) {
+        if (image != null && !image.isEmpty()) {
+            String contentType = image.getContentType();
+            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png")
+                    && !contentType.equals("image/gif") && !contentType.equals("image/webp"))) {
+                return Result.fail("仅支持 JPG / PNG / GIF / WebP 格式的图片");
+            }
+        }
         Object usernameAttr = httpRequest.getAttribute("username");
         String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
         PostCreateRequest request = new PostCreateRequest();
@@ -97,6 +104,16 @@ public class PostController {
             return Result.fail(401, "请先登录");
         }
         return postservice.listUserComments(username);
+    }
+
+    @GetMapping("/user/review-targets")
+    public Result getUserReviewTargets(HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.listUserReviewTargets(username);
     }
 }
 //1

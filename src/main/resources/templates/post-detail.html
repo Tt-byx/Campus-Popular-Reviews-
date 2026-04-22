@@ -30,6 +30,19 @@
     .meta { color: var(--apple-secondary); font-size: 0.9rem; margin-bottom: 24px; }
     .content { color: #333; line-height: 1.6; font-size: 1.1rem; white-space: pre-wrap; }
     
+    .detail-image {
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      background: #f0f0f2;
+    }
+    .detail-image img {
+      width: 100%;
+      max-height: 500px;
+      object-fit: cover;
+      display: block;
+    }
+    
     .target-card { 
         border: none; 
         border-radius: 16px; 
@@ -74,6 +87,47 @@
     .user-info { display: flex; align-items: center; gap: 12px; }
     .user-avatar { width: 32px; height: 32px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #555; }
     .score-badge { background: #ff9500; color: white; border-radius: 8px; padding: 2px 8px; font-size: 0.85rem; font-weight: 600; }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--apple-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+        margin-top: 6px;
+    }
+    .back-btn:hover {
+        color: var(--apple-blue);
+        background: rgba(0, 102, 204, 0.06);
+        text-decoration: none;
+    }
+
+    .detail-image { cursor: zoom-in; transition: opacity 0.2s; }
+    .detail-image:hover { opacity: 0.9; }
+
+    .lightbox {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.show { display: flex; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
@@ -81,7 +135,7 @@
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
         <h1 class="h3 m-0 fw-bold">帖子详情</h1>
-        <a href="/browse-post" class="text-decoration-none small" style="color: var(--apple-blue);">← 返回广场</a>
+        <a href="/browse-post" class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> 返回广场</a>
     </div>
     <div class="d-flex gap-3 align-items-center" id="navButtons"></div>
   </div>
@@ -94,7 +148,7 @@
         <div id="postTag"></div>
     </div>
     <div class="meta" id="postMeta"></div>
-    <div id="postImage" class="mb-4 d-none"><img id="postImageSrc" src="" class="img-fluid rounded-4 shadow-sm w-100" style="max-height: 500px; object-fit: cover;"></div>
+    <div id="postImage" class="detail-image d-none"><img id="postImageSrc" src="" alt="配图"></div>
     <div class="content" id="postContent"></div>
   </div>
 
@@ -115,6 +169,10 @@
   </div>
 
   <div id="targetList" class="d-grid gap-3"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img src="" alt="查看大图" id="lightboxImg">
 </div>
 
 <!-- Modals (Login/Register) -->
@@ -279,6 +337,16 @@
     renderNavButtons();
     loadPostDetail();
     loadReviewTargets();
+
+    // Lightbox - click image to view large
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    document.getElementById('postImageSrc').onclick = (e) => {
+        e.stopPropagation();
+        lightboxImg.src = e.target.src;
+        lightbox.classList.add('show');
+    };
+    lightbox.onclick = () => { lightbox.classList.remove('show'); };
   })();
 </script>
 </body>

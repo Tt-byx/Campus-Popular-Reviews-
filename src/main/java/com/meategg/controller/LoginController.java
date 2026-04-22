@@ -67,12 +67,14 @@ public class LoginController {
     }
 
     @PostMapping("/profile/avatar")
-    public Result uploadAvatar(@RequestParam("image") MultipartFile image) {
+    public Result uploadAvatar(@RequestParam("image") MultipartFile image, HttpServletRequest request) {
         if (image == null || image.isEmpty()) {
             return Result.fail("图片不能为空");
         }
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? "unknown" : String.valueOf(usernameAttr).trim();
         try {
-            String avatarUrl = ossService.uploadAvatar(image);
+            String avatarUrl = ossService.uploadAvatar(image, username);
             return Result.ok(200, "上传成功", avatarUrl);
         } catch (Exception e) {
             return Result.fail("头像上传失败: " + e.getMessage());

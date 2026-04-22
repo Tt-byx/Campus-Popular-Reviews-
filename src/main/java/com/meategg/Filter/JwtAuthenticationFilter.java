@@ -75,6 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/user/create".equals(path)
                 || "/post-detail".equals(path)
                 || "/browse-post".equals(path)
+                || "/post".equals(path)
                 || "/profile".equals(path)
                 || "/review-target-detail".equals(path)
                 || "/post/list".equals(path)
