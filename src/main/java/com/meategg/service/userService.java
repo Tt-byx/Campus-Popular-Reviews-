@@ -16,5 +16,11 @@ public interface userService extends IService<User> {
     Result getProfile(String username);
 
     Result updateProfile(String oldUsername, String newUsername, String signature, String avatar);
+
+    Result listAllUsers();
+
+    Result muteUser(String targetUsername);
+
+    Result deleteUser(String targetUsername);
 }
 //1

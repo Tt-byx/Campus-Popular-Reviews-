@@ -44,5 +44,10 @@ public class PageController {
     public String profilePage() {
         return "profile";
     }
+
+    @GetMapping("/admin")
+    public String adminPage() {
+        return "admin";
+    }
 }
 //1

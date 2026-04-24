@@ -16,11 +16,12 @@ public class JwtUtils {
   @Value("${jwt.expire}")
   private long expire;
 
-  public String createJwt(String username) {
+  public String createJwt(String username, String role) {
     return Jwts.builder()
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + expire * 1000))
         .setSubject(username)
+        .claim("role", role != null ? role : "user")
         .signWith(SignatureAlgorithm.HS256, key)
         .compact();
   }
@@ -46,6 +47,11 @@ public class JwtUtils {
   }
   public String getUsername(String jwt) {
     return parseJwt(jwt).getSubject();
+  }
+
+  public String getRole(String jwt) {
+    Object role = parseJwt(jwt).get("role");
+    return role != null ? role.toString() : "user";
   }
 
 

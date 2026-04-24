@@ -213,14 +213,17 @@
         localStorage.removeItem('token');
         localStorage.removeItem('tokenType');
         localStorage.removeItem('username');
+        localStorage.removeItem('role');
         location.reload();
       }
     };
 
     const renderNavButtons = () => {
+      const role = localStorage.getItem('role') || 'user';
       if (token) {
         navButtons.innerHTML = `
           <button class="btn btn-primary btn-pill px-4" onclick="location.href='/post'">去发帖</button>
+          ${role === 'admin' ? `<button class="btn btn-outline-secondary btn-pill px-3 ms-1" onclick="location.href='/admin'" style="font-size:0.82rem">🛡️ 管理</button>` : ''}
           <div class="user-info ms-2" style="cursor: pointer;" onclick="location.href='/profile'">
             <div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div>
             <span class="fw-medium">${username}</span>
@@ -264,6 +267,7 @@
           localStorage.setItem('token', result.data.token);
           localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
           localStorage.setItem('username', result.data.username || u);
+          localStorage.setItem('role', result.data.role || 'user');
           setMsg(modalMsg, '登录成功', 'success');
           setTimeout(() => location.reload(), 800);
         } else {

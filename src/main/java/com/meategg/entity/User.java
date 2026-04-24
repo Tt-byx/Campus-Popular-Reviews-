@@ -20,6 +20,12 @@ public class User {
     @TableField("password")
     private String password;
     
+    @TableField("role")
+    private String role;
+    
+    @TableField("status")
+    private String status;
+    
     @TableField("created_at")
     private LocalDateTime created_at;
 

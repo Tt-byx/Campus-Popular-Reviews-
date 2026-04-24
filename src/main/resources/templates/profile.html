@@ -138,7 +138,7 @@
         background: rgba(0, 102, 204, 0.06);
         text-decoration: none;
     }
-    .score-badge { background: #ff9500; color: white; border-radius: 8px; padding: 2px 10px; font-size: 0.85rem; font-weight: 600; }
+    .score-badge { background: linear-gradient(135deg, #ff9500, #ff6b00); color: white; border-radius: 8px; padding: 3px 10px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.02em; }
     
     .avatar-wrapper { cursor: zoom-in; transition: opacity 0.2s; }
     .avatar-wrapper:hover { opacity: 0.85; }
@@ -228,6 +228,16 @@
     const token = localStorage.getItem('token');
     const tokenType = localStorage.getItem('tokenType') || 'Bearer';
     const username = localStorage.getItem('username');
+
+    const SCORE_LABELS = { 1: '拉完了', 2: 'NPC', 3: '人上人', 4: '顶级', 5: '夯' };
+    const getScoreLabel = (s) => {
+      if (s == null || isNaN(s)) return '--';
+      if (s < 2) return '拉完了';
+      if (s < 3) return 'NPC';
+      if (s < 4) return '人上人';
+      if (s < 4.5) return '顶级';
+      return '夯';
+    };
 
     if (!token) {
         localStorage.setItem('showLoginMsg', '请先登录后再访问个人中心');
@@ -367,6 +377,7 @@
                 exitEdit();
                 loadUserPosts();
                 loadUserComments();
+                loadUserReviewTargets();
             } else {
                 alert(result.message);
             }
@@ -458,7 +469,7 @@
                                 <span class="text-secondary small">来自 </span>
                                 <a href="/post-detail?id=${t.postId}" class="text-decoration-none" style="color:var(--apple-blue)" onclick="event.stopPropagation()">${t.postTitle}</a>
                             </div>
-                            ${t.avgScore != null && t.avgScore !== '' ? `<div class="score-badge">★ ${Number(t.avgScore).toFixed(1)}</div>` : '<div class="text-muted small" style="background:#f0f0f2;border-radius:8px;padding:2px 8px;font-size:0.85rem;">暂未评分</div>'}
+                            ${t.avgScore != null && t.avgScore !== '' ? `<div class="score-badge" title="平均分 ${Number(t.avgScore).toFixed(1)}">${getScoreLabel(t.avgScore)}</div>` : '<div class="text-muted small" style="background:#f0f0f2;border-radius:8px;padding:3px 10px;font-size:0.8rem;">暂未评分</div>'}
                         </div>
                         <div class="text-secondary small">我评论了 ${t.commentCount} 次</div>
                     </div>
