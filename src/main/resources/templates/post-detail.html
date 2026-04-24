@@ -86,7 +86,7 @@
     .btn-pill { border-radius: 20px; padding: 6px 16px; font-weight: 500; font-size: 0.9rem; }
     .user-info { display: flex; align-items: center; gap: 12px; }
     .user-avatar { width: 32px; height: 32px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #555; }
-    .score-badge { background: #ff9500; color: white; border-radius: 8px; padding: 2px 8px; font-size: 0.85rem; font-weight: 600; }
+    .score-badge { background: linear-gradient(135deg, #ff9500, #ff6b00); color: white; border-radius: 8px; padding: 3px 10px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.02em; }
     
     .back-btn {
         display: inline-flex;
@@ -232,17 +232,28 @@
     const getPostId = () => new URLSearchParams(window.location.search).get('id');
     const setMsg = (el, text, type) => { if(el) { el.className = 'alert d-block alert-' + type + ' py-2 small'; el.textContent = text; } };
 
+    const SCORE_LABELS = { 1: '拉完了', 2: 'NPC', 3: '人上人', 4: '顶级', 5: '夯' };
+    const getScoreLabel = (s) => {
+      if (s == null || isNaN(s)) return '--';
+      if (s < 2) return '拉完了';
+      if (s < 3) return 'NPC';
+      if (s < 4) return '人上人';
+      if (s < 4.5) return '顶级';
+      return '夯';
+    };
+
     window.switchModal = (to) => {
         if (to === 'register') { loginModal.hide(); setTimeout(() => registerModal.show(), 400); }
         else { registerModal.hide(); setTimeout(() => loginModal.show(), 400); }
     };
     window.showLoginPrompt = (msg) => { loginModal.show(); if (msg) setMsg(document.getElementById('loginModalMsg'), msg, 'warning'); };
     window.showRegisterPrompt = () => registerModal.show();
-    window.handleLogout = () => { if (confirm('确定要退出登录吗？')) { localStorage.removeItem('token'); localStorage.removeItem('tokenType'); localStorage.removeItem('username'); location.reload(); } };
+    window.handleLogout = () => { if (confirm('确定要退出登录吗？')) { localStorage.removeItem('token'); localStorage.removeItem('tokenType'); localStorage.removeItem('username'); localStorage.removeItem('role'); location.reload(); } };
 
     const renderNavButtons = () => {
+      const role = localStorage.getItem('role') || 'user';
       if (token) {
-        navButtons.innerHTML = `<div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'"><div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span><button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="event.stopPropagation(); handleLogout()">退出</button></div>`;
+        navButtons.innerHTML = `<div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'"><div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span>${role === 'admin' ? ` <a href="/admin" class="btn btn-link btn-sm text-decoration-none p-0" style="color:var(--apple-blue);font-size:0.82rem">🛡️管理</a>` : ''}<button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="event.stopPropagation(); handleLogout()">退出</button></div>`;
         fetch('/user/profile', { headers: { 'Authorization': `${tokenType} ${token}` } })
           .then(res => res.json())
           .then(res => {
@@ -262,7 +273,7 @@
         const p = document.getElementById('loginPassword').value;
         const res = await fetch('/user/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
         const result = await res.json();
-        if (res.ok && result.code === 200) { localStorage.setItem('token', result.data.token); localStorage.setItem('tokenType', result.data.tokenType || 'Bearer'); localStorage.setItem('username', result.data.username || u); location.reload(); }
+        if (res.ok && result.code === 200) { localStorage.setItem('token', result.data.token); localStorage.setItem('tokenType', result.data.tokenType || 'Bearer'); localStorage.setItem('username', result.data.username || u); localStorage.setItem('role', result.data.role || 'user'); location.reload(); }
         else setMsg(document.getElementById('loginModalMsg'), result.message || '登录失败', 'danger');
     });
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -306,11 +317,16 @@
         if (result.code === 200) {
           const targets = result.data || [];
           if (!targets.length) { targetList.innerHTML = '<div class="text-center text-muted py-4">暂无评论对象</div>'; return; }
+          targets.sort((a, b) => {
+            const sa = a.avgScore != null ? a.avgScore : -1;
+            const sb = b.avgScore != null ? b.avgScore : -1;
+            return sb - sa;
+          });
           targetList.innerHTML = targets.map(t => `
             <div class="target-card" onclick="location.href='/review-target-detail?id=${t.id}'">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="target-name">${t.targetName}</div>
-                ${t.avgScore ? `<div class="score-badge">★ ${t.avgScore.toFixed(1)}</div>` : '<div class="text-muted small">暂无评分</div>'}
+                ${t.avgScore ? `<div class="score-badge" title="平均分 ${t.avgScore.toFixed(1)}">${getScoreLabel(t.avgScore)}</div>` : '<div class="text-muted small">暂无评分</div>'}
               </div>
               <div class="text-secondary small mt-1">${t.commentCount} 条评论</div>
             </div>

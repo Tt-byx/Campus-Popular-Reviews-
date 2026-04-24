@@ -25,6 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = resolveUsername(request);
         if (username != null) {
             request.setAttribute("username", username);
+            String jwt = resolveToken(request);
+            if (jwt != null) {
+                if (jwt.startsWith("Bearer ")) jwt = jwt.substring(7);
+                String role = jwtUtils.getRole(jwt);
+                request.setAttribute("role", role);
+            }
             filterChain.doFilter(request, response);
             return;
         }
@@ -79,6 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/profile".equals(path)
                 || "/review-target-detail".equals(path)
                 || "/post/list".equals(path)
+                || "/admin".equals(path)
                 || (path.startsWith("/post/") && !path.contains("/review-target") && !path.endsWith("/review-target"))
                 || (path.startsWith("/post/review-target/") && !path.endsWith("/comment"))
                 || "/error".equals(path)

@@ -1,5 +1,6 @@
 package com.meategg.service;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.meategg.DTO.PostCreateRequest;
 import com.meategg.entity.CommentContent;
@@ -617,6 +618,131 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         });
 
         return Result.ok(data);
+    }
+
+    @Override
+    public Result deletePost(Long postId) {
+        Post post = getById(postId);
+        if (post == null) {
+            return Result.fail("帖子不存在");
+        }
+        removeById(postId);
+        return Result.ok(200, "帖子已删除", null);
+    }
+
+    @Override
+    public Result listAllPosts() {
+        List<Post> posts = list(Wrappers.<Post>query().orderByDesc("created_at"));
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Post p : posts) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent().length() > 80 ? p.getContent().substring(0, 80) + "..." : p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("createdAt", p.getCreatedAt());
+            
+            User user = userMapper.selectById(p.getUserId());
+            item.put("username", user != null ? user.getUsername() : "未知");
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result getPostStats(Long postId) {
+        if (postId == null) return Result.fail("帖子ID不能为空");
+        
+        List<ReviewTarget> targets = reviewTargetMapper.selectList(
+            Wrappers.<ReviewTarget>query().eq("post_id", postId)
+        );
+        if (targets == null || targets.isEmpty()) {
+            return Result.ok(java.util.Collections.emptyMap());
+        }
+        
+        int[] scoreDist = new int[6];
+        java.util.List<java.util.Map<String, Object>> ranking = new java.util.ArrayList<>();
+        
+        for (ReviewTarget rt : targets) {
+            List<CommentContent> contents = commentContentMapper.selectList(
+                Wrappers.<CommentContent>query().eq("review_target_id", rt.getId())
+            );
+            
+            double totalScore = 0;
+            int scoreCnt = 0;
+            for (CommentContent cc : contents) {
+                if (cc.getScore() != null && cc.getScore() >= 1 && cc.getScore() <= 5) {
+                    scoreDist[cc.getScore()]++;
+                    totalScore += cc.getScore();
+                    scoreCnt++;
+                }
+            }
+            
+            java.util.Map<String, Object> item = new java.util.HashMap<>();
+            item.put("targetId", rt.getId());
+            item.put("targetName", rt.getTargetName());
+            item.put("avgScore", scoreCnt > 0 ? totalScore / scoreCnt : null);
+            item.put("commentCount", contents != null ? contents.size() : 0);
+            ranking.add(item);
+        }
+        
+        ranking.sort((a, b) -> {
+            Double sa = a.get("avgScore") != null ? ((Number)a.get("avgScore")).doubleValue() : -1;
+            Double sb = b.get("avgScore") != null ? ((Number)b.get("avgScore")).doubleValue() : -1;
+            return sb.compareTo(sa);
+        });
+        
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        java.util.Map<String, Integer> distribution = new java.util.LinkedHashMap<>();
+        distribution.put("拉完了", scoreDist[1]);
+        distribution.put("NPC", scoreDist[2]);
+        distribution.put("人上人", scoreDist[3]);
+        distribution.put("顶级", scoreDist[4]);
+        distribution.put("夯", scoreDist[5]);
+        stats.put("distribution", distribution);
+        stats.put("ranking", ranking);
+        stats.put("totalRatings", scoreDist[1] + scoreDist[2] + scoreDist[3] + scoreDist[4] + scoreDist[5]);
+        
+        return Result.ok(stats);
+    }
+
+    @Override
+    public Result getReviewTargetStats(Long targetId) {
+        if (targetId == null) return Result.fail("评论对象ID不能为空");
+        List<CommentContent> contents = commentContentMapper.selectList(
+            Wrappers.<CommentContent>query().eq("review_target_id", targetId)
+        );
+        if (contents == null || contents.isEmpty()) {
+            java.util.Map<String, Object> empty = new java.util.LinkedHashMap<>();
+            java.util.Map<String, Integer> d = new java.util.LinkedHashMap<>();
+            d.put("拉完了", 0); d.put("NPC", 0); d.put("人上人", 0); d.put("顶级", 0); d.put("夯", 0);
+            empty.put("distribution", d);
+            empty.put("totalRatings", 0);
+            return Result.ok(empty);
+        }
+        int[] scoreDist = new int[6];
+        double total = 0;
+        int cnt = 0;
+        for (CommentContent cc : contents) {
+            if (cc.getScore() != null && cc.getScore() >= 1 && cc.getScore() <= 5) {
+                scoreDist[cc.getScore()]++;
+                total += cc.getScore();
+                cnt++;
+            }
+        }
+        java.util.Map<String, Object> stats = new java.util.LinkedHashMap<>();
+        java.util.Map<String, Integer> distribution = new java.util.LinkedHashMap<>();
+        distribution.put("拉完了", scoreDist[1]);
+        distribution.put("NPC", scoreDist[2]);
+        distribution.put("人上人", scoreDist[3]);
+        distribution.put("顶级", scoreDist[4]);
+        distribution.put("夯", scoreDist[5]);
+        stats.put("distribution", distribution);
+        stats.put("totalRatings", cnt);
+        stats.put("avgScore", cnt > 0 ? total / cnt : null);
+        return Result.ok(stats);
     }
 }
 //1

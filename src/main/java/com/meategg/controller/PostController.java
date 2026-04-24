@@ -115,5 +115,15 @@ public class PostController {
         }
         return postservice.listUserReviewTargets(username);
     }
+
+    @GetMapping("/{id}/stats")
+    public Result getPostStats(@PathVariable Long id) {
+        return postservice.getPostStats(id);
+    }
+
+    @GetMapping("/review-target/{id}/stats")
+    public Result getReviewTargetStats(@PathVariable Long id) {
+        return postservice.getReviewTargetStats(id);
+    }
 }
 //1

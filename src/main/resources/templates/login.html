@@ -76,6 +76,8 @@
       localStorage.setItem('token', token);
       localStorage.setItem('tokenType', tokenType);
       localStorage.setItem('expiresIn', String(payload.expiresIn || ''));
+      localStorage.setItem('username', payload.username || '');
+      localStorage.setItem('role', payload.role || 'user');
 
       const maxAgeNum = Number(payload.expiresIn);
       if (Number.isFinite(maxAgeNum) && maxAgeNum > 0) {
