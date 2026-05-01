@@ -34,5 +34,12 @@ public class Post {
     
     @TableField("tag")
     private String tag;
+
+    @TableField("view_count")
+    private Integer viewCount;
+
+    @TableField(exist = false)
+    private Integer commentCount;
+
 }
 //1

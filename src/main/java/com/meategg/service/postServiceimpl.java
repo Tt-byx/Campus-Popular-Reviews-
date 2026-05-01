@@ -119,6 +119,20 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
 
         List<Map<String, Object>> data = new ArrayList<>();
         for (Post p : posts) {
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                    .eq("post_id", p.getId())
+            );
+
+            int totalComments = 0;
+            for (ReviewTarget rt : targets) {
+                List<CommentUser> comments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", rt.getId())
+                );
+                totalComments += comments.size();
+            }
+
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
             item.put("title", p.getTitle());
@@ -128,10 +142,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
             item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
             data.add(item);
         }
         return Result.ok(data);
     }
+
 
     @Override
     public Result createReviewTarget(Long postId, String targetName, String username) {
@@ -299,6 +316,11 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (post == null) {
             return Result.fail("帖子不存在");
         }
+
+        Integer currentViews = post.getViewCount() != null ? post.getViewCount() : 0;
+        post.setViewCount(currentViews + 1);
+        postMapper.updateById(post);
+
         User user = userMapper.selectById(post.getUserId());
         Map<String, Object> data = new HashMap<>();
         data.put("id", post.getId());
@@ -309,6 +331,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("userId", post.getUserId());
         data.put("username", user != null ? user.getUsername() : "未知用户");
         data.put("createdAt", post.getCreatedAt());
+        data.put("viewCount", post.getViewCount());
         return Result.ok(data);
     }
 
