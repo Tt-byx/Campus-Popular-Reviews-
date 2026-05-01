@@ -3,6 +3,7 @@ package com.meategg.controller;
 import com.meategg.DTO.PostCreateRequest;
 import com.meategg.entity.Result;
 import com.meategg.service.postService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -129,6 +130,36 @@ public class PostController {
     @GetMapping("/list/by-tag")
     public Result listPostsByTag(@RequestParam String tag) {
         return postservice.listPostsByTag(tag);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result deletePost(@PathVariable Long id, HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.deletePost(id, username);
+    }
+
+    @DeleteMapping("/comment/{id}")
+    public Result deleteComment(@PathVariable Long id, HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.deleteComment(id, username);
+    }
+
+    @DeleteMapping("/review-target/{id}")
+    public Result deleteReviewTarget(@PathVariable Long id, HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return postservice.deleteReviewTarget(id, username);
     }
 }
 //1

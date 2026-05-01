@@ -644,14 +644,144 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     }
 
     @Override
-    public Result deletePost(Long postId) {
+    public Result deletePost(Long postId, String username) {
+        if (postId == null) {
+            return Result.fail("帖子ID不能为空");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail(401, "请先登录");
+        }
+
         Post post = getById(postId);
         if (post == null) {
             return Result.fail("帖子不存在");
         }
+
+        User user = userMapper.selectOne(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
+                        .eq("username", username.trim())
+                        .last("limit 1")
+        );
+        if (user == null) {
+            return Result.fail(401, "用户不存在");
+        }
+
+        if (!post.getUserId().equals(Long.valueOf(user.getId()))) {
+            return Result.fail(403, "无权删除此帖子");
+        }
+
+        List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                        .eq("post_id", postId)
+        );
+        if (!targets.isEmpty()) {
+            List<Long> targetIds = new ArrayList<>();
+            for (ReviewTarget rt : targets) {
+                targetIds.add(rt.getId());
+            }
+
+            List<CommentUser> comments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                            .in("review_target_id", targetIds)
+            );
+            if (!comments.isEmpty()) {
+                List<Long> commentIds = new ArrayList<>();
+                for (CommentUser cu : comments) {
+                    commentIds.add(cu.getId());
+                }
+                commentContentMapper.delete(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                                .in("comment_id", commentIds)
+                );
+                commentUserMapper.deleteBatchIds(commentIds);
+            }
+
+            reviewTargetMapper.deleteBatchIds(targetIds);
+        }
+
         removeById(postId);
         return Result.ok(200, "帖子已删除", null);
     }
+
+    @Override
+    public Result deleteComment(Long commentId, String username) {
+        if (commentId == null) {
+            return Result.fail("评论ID不能为空");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail(401, "请先登录");
+        }
+
+        CommentUser comment = commentUserMapper.selectById(commentId);
+        if (comment == null) {
+            return Result.fail("评论不存在");
+        }
+
+        if (!comment.getUsername().equals(username.trim())) {
+            return Result.fail(403, "无权删除此评论");
+        }
+
+        commentContentMapper.delete(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                        .eq("comment_id", commentId)
+        );
+
+        commentUserMapper.deleteById(commentId);
+        return Result.ok(200, "评论已删除", null);
+    }
+
+    @Override
+    public Result deleteReviewTarget(Long targetId, String username) {
+        if (targetId == null) {
+            return Result.fail("评论对象ID不能为空");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            return Result.fail(401, "请先登录");
+        }
+
+        ReviewTarget target = reviewTargetMapper.selectById(targetId);
+        if (target == null) {
+            return Result.fail("评论对象不存在");
+        }
+
+        Post post = postMapper.selectById(target.getPostId());
+        if (post == null) {
+            return Result.fail("关联帖子不存在");
+        }
+
+        User user = userMapper.selectOne(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
+                        .eq("username", username.trim())
+                        .last("limit 1")
+        );
+        if (user == null) {
+            return Result.fail(401, "用户不存在");
+        }
+
+        if (!post.getUserId().equals(Long.valueOf(user.getId()))) {
+            return Result.fail(403, "无权删除此评论对象");
+        }
+
+        List<CommentUser> comments = commentUserMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", targetId)
+        );
+        if (!comments.isEmpty()) {
+            List<Long> commentIds = new ArrayList<>();
+            for (CommentUser cu : comments) {
+                commentIds.add(cu.getId());
+            }
+            commentContentMapper.delete(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                            .in("comment_id", commentIds)
+            );
+            commentUserMapper.deleteBatchIds(commentIds);
+        }
+
+        reviewTargetMapper.deleteById(targetId);
+        return Result.ok(200, "评论对象已删除", null);
+    }
+
 
     @Override
     public Result listAllPosts() {

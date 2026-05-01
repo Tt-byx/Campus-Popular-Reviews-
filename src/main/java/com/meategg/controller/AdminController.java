@@ -52,7 +52,14 @@ public class AdminController {
     @DeleteMapping("/post/{postId}")
     public Result deletePost(@PathVariable Long postId, HttpServletRequest request) {
         if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
-        return postService.deletePost(postId);
+
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+
+        return postService.deletePost(postId, username);
     }
 }
 //1

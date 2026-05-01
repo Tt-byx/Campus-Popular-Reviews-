@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.meategg.DTO.LoginResponse;
 import com.meategg.Utils.JwtUtils;
+import com.meategg.entity.CommentUser;
 import com.meategg.entity.Result;
 import com.meategg.entity.User;
+import com.meategg.mapper.CommentUserMapper;
 import com.meategg.mapper.UserMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,9 @@ import java.util.Map;
 public class userServiceimpl extends ServiceImpl<UserMapper, User> implements userService {
 @Resource
 private JwtUtils jwtUtils;
+@Resource
+private CommentUserMapper commentUserMapper;
+
 
     @Override
     public Result login(String username, String password) {
@@ -100,6 +105,15 @@ private JwtUtils jwtUtils;
         }
 
         updateById(user);
+
+        if (usernameChanged) {
+            commentUserMapper.update(null,
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>update()
+                            .set("username", newUsername)
+                            .eq("username", oldUsername)
+            );
+        }
+
         user.setPassword(null);
 
         Map<String, Object> responseData = new java.util.HashMap<>();
