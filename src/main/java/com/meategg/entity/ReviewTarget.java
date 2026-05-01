@@ -25,5 +25,9 @@ public class ReviewTarget {
 
     @TableField("updated_at")
     private LocalDateTime updatedAt;
+
+    @TableField(exist = false)
+    private Integer commentCount;
+
 }
 //1

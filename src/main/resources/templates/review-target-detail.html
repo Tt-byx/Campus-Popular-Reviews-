@@ -83,8 +83,17 @@
             <div class="text-secondary" id="postInfo"></div>
         </div>
         <div class="text-end">
-            <div class="score-large" id="avgScore">--</div>
-            <div class="text-secondary small">平均得分</div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="text-center">
+                    <div class="fs-4 fw-bold text-primary" id="commentCountTop">0</div>
+                    <div class="text-secondary small">评论</div>
+                </div>
+                <div class="vr"></div>
+                <div>
+                    <div class="score-large" id="avgScore">--</div>
+                    <div class="text-secondary small">平均得分</div>
+                </div>
+            </div>
         </div>
     </div>
   </div>
@@ -212,7 +221,7 @@
       }
     };
 
-    // Auth logic
+    //Auth logic
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const u = document.getElementById('loginUsername').value.trim();
@@ -245,10 +254,12 @@
           document.getElementById('targetName').textContent = data.targetName;
           document.getElementById('postInfo').textContent = `所属帖子：${data.postTitle}`;
           document.getElementById('backToPost').href = `/post-detail?id=${data.postId}`;
-          
+
           const comments = data.comments || [];
-          document.getElementById('commentCount').textContent = comments.length;
-          
+          const commentCount = comments.length;
+          document.getElementById('commentCount').textContent = commentCount;
+          document.getElementById('commentCountTop').textContent = commentCount;
+
           const scores = comments.filter(c => c.score).map(c => c.score);
           if (scores.length) {
               const avg = scores.reduce((a,b) => a+b, 0) / scores.length;
