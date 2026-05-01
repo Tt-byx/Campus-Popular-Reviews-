@@ -49,5 +49,10 @@ public class PageController {
     public String adminPage() {
         return "admin";
     }
+
+    @GetMapping("/categories")
+    public String categoriesPage() {
+        return "categories";
+    }
 }
 //1

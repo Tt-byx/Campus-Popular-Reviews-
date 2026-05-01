@@ -91,7 +91,7 @@
     .btn-pill { border-radius: 20px; padding: 6px 16px; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; }
     .user-info { display: flex; align-items: center; gap: 12px; }
     .user-avatar { width: 32px; height: 32px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #555; }
-    
+
     .badge-apple { background: #f0f0f2; color: #666; font-weight: 500; border-radius: 8px; padding: 4px 10px; font-size: 0.75rem; border: none; }
   </style>
 </head>
@@ -99,8 +99,8 @@
 <div class="wrap">
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
-        <h1 class="h3 m-0 fw-bold">校圈</h1>
-        <p class="text-secondary small m-0">发现校园新动态</p>
+      <h1 class="h3 m-0 fw-bold">校圈</h1>
+      <p class="text-secondary small m-0">发现校园新动态</p>
     </div>
     <div class="d-flex gap-3 align-items-center" id="navButtons">
       <!-- 动态生成 -->
@@ -222,6 +222,7 @@
       const role = localStorage.getItem('role') || 'user';
       if (token) {
         navButtons.innerHTML = `
+          <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/categories'">🗂️ 分类</button>
           <button class="btn btn-primary btn-pill px-4" onclick="location.href='/post'">去发帖</button>
           ${role === 'admin' ? `<button class="btn btn-outline-secondary btn-pill px-3 ms-1" onclick="location.href='/admin'" style="font-size:0.82rem">🛡️ 管理</button>` : ''}
           <div class="user-info ms-2" style="cursor: pointer;" onclick="location.href='/profile'">
@@ -232,14 +233,15 @@
         `;
         // 加载真实头像
         fetch('/user/profile', { headers: { 'Authorization': `${tokenType} ${token}` } })
-          .then(res => res.json())
-          .then(res => {
-            if (res.code === 200 && res.data.avatar) {
-              document.getElementById('navAvatar').innerHTML = `<img src="${res.data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-            }
-          });
+                .then(res => res.json())
+                .then(res => {
+                  if (res.code === 200 && res.data.avatar) {
+                    document.getElementById('navAvatar').innerHTML = `<img src="${res.data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                  }
+                });
       } else {
         navButtons.innerHTML = `
+          <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/categories'">🗂️ 分类</button>
           <button class="btn btn-primary btn-pill px-4" onclick="showLoginPrompt('请先登录后再进行此操作')">去发帖</button>
           <div class="vr mx-2 opacity-10"></div>
           <button class="btn btn-outline-dark btn-pill px-4" onclick="showLoginPrompt()">登录</button>

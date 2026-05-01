@@ -35,5 +35,7 @@ public interface postService extends IService<Post> {
     Result getPostStats(Long postId);
 
     Result getReviewTargetStats(Long targetId);
+
+    Result listPostsByTag(String tag);
 }
 //1

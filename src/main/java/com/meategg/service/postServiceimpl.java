@@ -744,5 +744,54 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         stats.put("avgScore", cnt > 0 ? total / cnt : null);
         return Result.ok(stats);
     }
+
+    @Override
+    public Result listPostsByTag(String tag) {
+        if (tag == null || tag.trim().isEmpty()) {
+            return Result.fail("分类标签不能为空");
+        }
+
+        List<Post> posts = postMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                        .eq("tag", tag.trim())
+                        .orderByDesc("created_at")
+        );
+
+        if (posts == null || posts.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        Set<Integer> userIds = new HashSet<>();
+        for (Post p : posts) {
+            if (p.getUserId() != null) {
+                userIds.add(p.getUserId().intValue());
+            }
+        }
+
+        Map<Long, String> usernameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userMapper.selectBatchIds(userIds);
+            for (User u : users) {
+                if (u != null && u.getId() != null) {
+                    usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                }
+            }
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Post p : posts) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("createdAt", p.getCreatedAt());
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
 }
 //1

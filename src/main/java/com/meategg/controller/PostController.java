@@ -125,5 +125,10 @@ public class PostController {
     public Result getReviewTargetStats(@PathVariable Long id) {
         return postservice.getReviewTargetStats(id);
     }
+
+    @GetMapping("/list/by-tag")
+    public Result listPostsByTag(@RequestParam String tag) {
+        return postservice.listPostsByTag(tag);
+    }
 }
 //1
