@@ -54,5 +54,10 @@ public class PageController {
     public String categoriesPage() {
         return "categories";
     }
+
+    @GetMapping("/ranking")
+    public String rankingPage() {
+        return "ranking";
+    }
 }
 //1

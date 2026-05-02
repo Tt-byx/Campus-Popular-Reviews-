@@ -248,7 +248,9 @@
       const role = localStorage.getItem('role') || 'user';
       if (token) {
         navButtons.innerHTML = `
+          <button class="btn btn-sm btn-outline-primary" onclick="refreshPosts()" style="font-size: 0.85rem; padding: 6px 14px;">🔄 刷新</button>
           <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/categories'">🗂️ 分类</button>
+          <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/ranking'">🏆 排行</button>
           <button class="btn btn-primary btn-pill px-4" onclick="location.href='/post'">去发帖</button>
           ${role === 'admin' ? `<button class="btn btn-outline-secondary btn-pill px-3 ms-1" onclick="location.href='/admin'" style="font-size:0.82rem">🛡️ 管理</button>` : ''}
           <div class="user-info ms-2" style="cursor: pointer;" onclick="location.href='/profile'">
@@ -268,6 +270,7 @@
       } else {
         navButtons.innerHTML = `
           <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/categories'">🗂️ 分类</button>
+          <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/ranking'">🏆 排行</button>
           <button class="btn btn-primary btn-pill px-4" onclick="showLoginPrompt('请先登录后再进行此操作')">去发帖</button>
           <div class="vr mx-2 opacity-10"></div>
           <button class="btn btn-outline-dark btn-pill px-4" onclick="showLoginPrompt()">登录</button>
@@ -347,7 +350,7 @@
             <div class="post-stats">
               <div class="stat-item">
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                 </svg>
                 <span>${item.viewCount || 0}</span>
               </div>
@@ -366,11 +369,37 @@
     const load = async () => {
       const headers = {};
       if (token) headers['Authorization'] = `${tokenType} ${token}`;
+
+      let previousTopIds = JSON.parse(localStorage.getItem('previousTopIds') || '[]');
+
       try {
-        const res = await fetch('/post/list', { method: 'GET', headers });
+        const res = await fetch('/post/list/personalized?previousIds=' + previousTopIds.join(','), { method: 'GET', headers });
         const result = await res.json();
-        if (result.code === 200) renderList(result.data);
+        if (result.code === 200) {
+          renderList(result.data);
+
+          const newTopIds = result.data.slice(0, 10).map(item => item.id);
+          localStorage.setItem('previousTopIds', JSON.stringify(newTopIds));
+        }
       } catch (e) { console.error(e); }
+    };
+
+    window.refreshPosts = async () => {
+      const headers = {};
+      if (token) headers['Authorization'] = `${tokenType} ${token}`;
+
+      let previousTopIds = JSON.parse(localStorage.getItem('previousTopIds') || '[]');
+
+      try {
+        const res = await fetch('/post/list/personalized?_=' + Date.now() + '&previousIds=' + previousTopIds.join(','), { method: 'GET', headers });
+        const result = await res.json();
+        if (result.code === 200) {
+          renderList(result.data);
+
+          const newTopIds = result.data.slice(0, 10).map(item => item.id);
+          localStorage.setItem('previousTopIds', JSON.stringify(newTopIds));
+        }
+      } catch (e) { console.error('刷新失败:', e); }
     };
 
     renderNavButtons();

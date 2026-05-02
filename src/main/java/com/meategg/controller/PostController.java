@@ -132,6 +132,18 @@ public class PostController {
         return postservice.listPostsByTag(tag);
     }
 
+    @GetMapping("/list/ranking")
+    public Result listPostsRanking(@RequestParam(defaultValue = "hot") String sort) {
+        return postservice.listPostsRanking(sort);
+    }
+
+    @GetMapping("/list/personalized")
+    public Result getPersonalizedRecommendation(@RequestParam(required = false) String previousIds, HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        return postservice.getPersonalizedRecommendation(username, previousIds);
+    }
+
     @DeleteMapping("/{id}")
     public Result deletePost(@PathVariable Long id, HttpServletRequest request) {
         Object usernameAttr = request.getAttribute("username");

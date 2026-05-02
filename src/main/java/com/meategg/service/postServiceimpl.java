@@ -899,6 +899,89 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     }
 
     @Override
+    public Result listPostsRanking(String sortType) {
+        if (sortType == null || sortType.trim().isEmpty()) {
+            sortType = "hot";
+        }
+
+        List<Post> posts;
+        if ("time".equals(sortType)) {
+            posts = postMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                            .orderByDesc("created_at")
+            );
+        } else {
+            posts = postMapper.selectList(com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query().orderByDesc("id"));
+        }
+
+        if (posts == null || posts.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        Set<Integer> userIds = new HashSet<>();
+        for (Post p : posts) {
+            if (p.getUserId() != null) {
+                userIds.add(p.getUserId().intValue());
+            }
+        }
+        Map<Long, String> usernameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userMapper.selectBatchIds(userIds);
+            for (User u : users) {
+                if (u != null && u.getId() != null) {
+                    usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                }
+            }
+        }
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Post p : posts) {
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                            .eq("post_id", p.getId())
+            );
+
+            int totalComments = 0;
+            for (ReviewTarget rt : targets) {
+                List<CommentUser> comments = commentUserMapper.selectList(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                                .eq("review_target_id", rt.getId())
+                );
+                totalComments += comments.size();
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
+            data.add(item);
+        }
+
+        if ("hot".equals(sortType)) {
+            data.sort((a, b) -> {
+                Integer viewA = (Integer) a.get("viewCount");
+                Integer viewB = (Integer) b.get("viewCount");
+                Integer commentA = (Integer) a.get("commentCount");
+                Integer commentB = (Integer) b.get("commentCount");
+                
+                double hotA = viewA * 0.4 + commentA * 0.6;
+                double hotB = viewB * 0.4 + commentB * 0.6;
+                
+                return Double.compare(hotB, hotA);
+            });
+        }
+
+        return Result.ok(data);
+    }
+
+    @Override
     public Result listPostsByTag(String tag) {
         if (tag == null || tag.trim().isEmpty()) {
             return Result.fail("分类标签不能为空");
@@ -945,6 +1028,152 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             data.add(item);
         }
         return Result.ok(data);
+    }
+
+    @Override
+    public Result getPersonalizedRecommendation(String username, String previousIds) {
+        List<Post> allPosts = postMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+        );
+
+        if (allPosts == null || allPosts.isEmpty()) {
+            return Result.ok(new ArrayList<>());
+        }
+
+        Set<Integer> userIds = new HashSet<>();
+        for (Post p : allPosts) {
+            if (p.getUserId() != null) {
+                userIds.add(p.getUserId().intValue());
+            }
+        }
+        Map<Long, String> usernameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userMapper.selectBatchIds(userIds);
+            for (User u : users) {
+                if (u != null && u.getId() != null) {
+                    usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                }
+            }
+        }
+
+        Set<Long> previousTopIdSet = new HashSet<>();
+        if (previousIds != null && !previousIds.trim().isEmpty()) {
+            String[] ids = previousIds.split(",");
+            for (String id : ids) {
+                try {
+                    previousTopIdSet.add(Long.parseLong(id.trim()));
+                } catch (NumberFormatException e) {
+                }
+            }
+        }
+
+        List<Map<String, Object>> postData = new ArrayList<>();
+        for (Post p : allPosts) {
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                            .eq("post_id", p.getId())
+            );
+
+            int totalComments = 0;
+            for (ReviewTarget rt : targets) {
+                List<CommentUser> comments = commentUserMapper.selectList(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                                .eq("review_target_id", rt.getId())
+                );
+                totalComments += comments.size();
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
+            item.put("wasPreviouslyTop", previousTopIdSet.contains(p.getId()));
+            postData.add(item);
+        }
+
+        if (username == null || username.trim().isEmpty()) {
+            for (Map<String, Object> item : postData) {
+                Integer viewCount = (Integer) item.get("viewCount");
+                Integer commentCount = (Integer) item.get("commentCount");
+                double hotScore = viewCount * 0.4 + commentCount * 0.6;
+                
+                Boolean wasPreviouslyTop = (Boolean) item.get("wasPreviouslyTop");
+                if (wasPreviouslyTop != null && wasPreviouslyTop) {
+                    hotScore *= 0.4;
+                }
+                
+                double randomFactor = 0.8 + Math.random() * 0.4;
+                double finalScore = hotScore * randomFactor;
+                item.put("score", finalScore);
+            }
+            
+            postData.sort((a, b) -> {
+                Double scoreA = ((Number) a.get("score")).doubleValue();
+                Double scoreB = ((Number) b.get("score")).doubleValue();
+                return Double.compare(scoreB, scoreA);
+            });
+        } else {
+            List<CommentUser> userComments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                            .eq("username", username.trim())
+            );
+
+            Map<String, Integer> tagInteractionCount = new HashMap<>();
+            for (CommentUser comment : userComments) {
+                ReviewTarget target = reviewTargetMapper.selectById(comment.getReviewTargetId());
+                if (target != null) {
+                    Post post = postMapper.selectById(target.getPostId());
+                    if (post != null && post.getTag() != null) {
+                        String tag = post.getTag();
+                        tagInteractionCount.merge(tag, 1, Integer::sum);
+                    }
+                }
+            }
+
+            for (Map<String, Object> item : postData) {
+                Integer viewCount = (Integer) item.get("viewCount");
+                Integer commentCount = (Integer) item.get("commentCount");
+                String tag = (String) item.get("tag");
+                
+                double baseHotScore = viewCount * 0.3 + commentCount * 0.3;
+                
+                double tagPreferenceScore = 0;
+                if (tag != null && tagInteractionCount.containsKey(tag)) {
+                    tagPreferenceScore = tagInteractionCount.get(tag) * 0.4;
+                }
+                
+                double personalScore = baseHotScore + tagPreferenceScore;
+                
+                Boolean wasPreviouslyTop = (Boolean) item.get("wasPreviouslyTop");
+                if (wasPreviouslyTop != null && wasPreviouslyTop) {
+                    personalScore *= 0.4;
+                }
+                
+                double randomFactor = 0.75 + Math.random() * 0.5;
+                double finalScore = personalScore * randomFactor;
+                item.put("score", finalScore);
+            }
+
+            postData.sort((a, b) -> {
+                Double scoreA = ((Number) a.get("score")).doubleValue();
+                Double scoreB = ((Number) b.get("score")).doubleValue();
+                return Double.compare(scoreB, scoreA);
+            });
+        }
+
+        for (Map<String, Object> item : postData) {
+            item.remove("score");
+            item.remove("wasPreviouslyTop");
+        }
+
+        return Result.ok(postData);
     }
 }
 //1
