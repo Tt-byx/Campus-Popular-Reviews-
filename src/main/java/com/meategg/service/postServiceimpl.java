@@ -1175,5 +1175,92 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
 
         return Result.ok(postData);
     }
+
+    @Override
+    public Result search(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Result.fail("搜索关键词不能为空");
+        }
+
+        String trimmedKeyword = keyword.trim();
+
+        List<Post> matchedPosts = postMapper.searchByTitle(trimmedKeyword);
+        List<ReviewTarget> matchedTargets = reviewTargetMapper.searchByTargetName(trimmedKeyword);
+
+        Set<Integer> userIds = new HashSet<>();
+        for (Post p : matchedPosts) {
+            if (p.getUserId() != null) {
+                userIds.add(p.getUserId().intValue());
+            }
+        }
+        Map<Long, String> usernameMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userMapper.selectBatchIds(userIds);
+            for (User u : users) {
+                if (u != null && u.getId() != null) {
+                    usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                }
+            }
+        }
+
+        List<Map<String, Object>> postResults = new ArrayList<>();
+        for (Post p : matchedPosts) {
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                    .eq("post_id", p.getId())
+            );
+
+            int totalComments = 0;
+            for (ReviewTarget rt : targets) {
+                List<CommentUser> comments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", rt.getId())
+                );
+                totalComments += comments.size();
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
+            item.put("type", "post");
+            postResults.add(item);
+        }
+
+        List<Map<String, Object>> targetResults = new ArrayList<>();
+        for (ReviewTarget rt : matchedTargets) {
+            Post post = postMapper.selectById(rt.getPostId());
+            if (post != null) {
+                List<CommentUser> comments = commentUserMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", rt.getId())
+                );
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", rt.getId());
+                item.put("postId", rt.getPostId());
+                item.put("targetName", rt.getTargetName());
+                item.put("postTitle", post.getTitle());
+                item.put("commentCount", comments.size());
+                item.put("createdAt", rt.getCreatedAt());
+                item.put("type", "review_target");
+                targetResults.add(item);
+            }
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("posts", postResults);
+        data.put("reviewTargets", targetResults);
+        data.put("totalResults", postResults.size() + targetResults.size());
+
+        return Result.ok(data);
+    }
 }
 //1

@@ -164,6 +164,7 @@ public class PostController {
         return postservice.deleteComment(id, username);
     }
 
+
     @DeleteMapping("/review-target/{id}")
     public Result deleteReviewTarget(@PathVariable Long id, HttpServletRequest request) {
         Object usernameAttr = request.getAttribute("username");
@@ -172,6 +173,11 @@ public class PostController {
             return Result.fail(401, "请先登录");
         }
         return postservice.deleteReviewTarget(id, username);
+    }
+
+    @GetMapping("/search")
+    public Result search(@RequestParam String keyword) {
+        return postservice.search(keyword);
     }
 }
 //1

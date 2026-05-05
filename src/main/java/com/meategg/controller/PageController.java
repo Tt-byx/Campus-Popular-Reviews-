@@ -59,5 +59,10 @@ public class PageController {
     public String rankingPage() {
         return "ranking";
     }
+
+    @GetMapping("/search")
+    public String searchPage() {
+        return "search";
+    }
 }
 //1

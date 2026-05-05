@@ -45,5 +45,7 @@ public interface postService extends IService<Post> {
     Result listPostsRanking(String sortType);
 
     Result getPersonalizedRecommendation(String username, String previousIds);
+
+    Result search(String keyword);
 }
 //1
