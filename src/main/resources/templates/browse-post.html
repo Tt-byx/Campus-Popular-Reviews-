@@ -274,7 +274,7 @@
           <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/categories'">🗂️ 分类</button>
           <button class="btn btn-outline-primary btn-pill px-4" onclick="location.href='/ranking'">🏆 排行</button>
           <button class="btn btn-primary btn-pill px-4" onclick="location.href='/post'">去发帖</button>
-          ${role === 'admin' ? `<button class="btn btn-outline-secondary btn-pill px-3 ms-1" onclick="location.href='/admin'" style="font-size:0.82rem">🛡️ 管理</button>` : ''}
+          ${(role === 'admin' || role === 'super_admin') ? `<button class="btn btn-outline-secondary btn-pill px-3 ms-1" onclick="location.href='/admin'" style="font-size:0.82rem">🛡️ 管理</button>` : ''}
           <div class="user-info ms-2" style="cursor: pointer;" onclick="location.href='/profile'">
             <div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div>
             <span class="fw-medium">${username}</span>

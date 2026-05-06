@@ -9,11 +9,13 @@ import com.meategg.entity.Post;
 import com.meategg.entity.Result;
 import com.meategg.entity.ReviewTarget;
 import com.meategg.entity.User;
+import com.meategg.entity.BannedWord;
 import com.meategg.mapper.CommentContentMapper;
 import com.meategg.mapper.CommentUserMapper;
 import com.meategg.mapper.PostMapper;
 import com.meategg.mapper.ReviewTargetMapper;
 import com.meategg.mapper.UserMapper;
+import com.meategg.mapper.BannedWordMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -39,6 +41,22 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
     private CommentContentMapper commentContentMapper;
     @Resource
     private OssService ossService;
+    @Resource
+    private BannedWordMapper bannedWordMapper;
+
+    private String checkBannedWords(String... texts) {
+        List<BannedWord> bannedWords = bannedWordMapper.selectList(null);
+        if (bannedWords == null || bannedWords.isEmpty()) return null;
+        for (String text : texts) {
+            if (text == null) continue;
+            for (BannedWord bw : bannedWords) {
+                if (text.contains(bw.getWord())) {
+                    return bw.getWord();
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public Result createPost(PostCreateRequest request, String username, org.springframework.web.multipart.MultipartFile image) {
@@ -56,6 +74,11 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         }
         if (username == null || username.trim().isEmpty()) {
             return Result.fail(401, "请先登录");
+        }
+
+        String bannedWord = checkBannedWords(request.getTitle(), request.getContent());
+        if (bannedWord != null) {
+            return Result.fail("内容包含违禁词「" + bannedWord + "」，请修改后重新发布");
         }
 
         User user = userMapper.selectOne(com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query()
@@ -163,6 +186,11 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         }
         if (username == null || username.trim().isEmpty()) {
             return Result.fail(401, "请先登录");
+        }
+
+        String bannedWord = checkBannedWords(targetName);
+        if (bannedWord != null) {
+            return Result.fail("评论对象名称包含违禁词「" + bannedWord + "」，请修改后重新发布");
         }
 
         Post post = postMapper.selectById(postId);
@@ -351,6 +379,11 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         }
         if (score != null && (score < 0 || score > 5)) {
             return Result.fail("评分范围必须在 0 到 5");
+        }
+
+        String bannedWord = checkBannedWords(content);
+        if (bannedWord != null) {
+            return Result.fail("评论内容包含违禁词「" + bannedWord + "」，请修改后重新发布");
         }
 
         ReviewTarget reviewTarget = reviewTargetMapper.selectById(reviewTargetId);

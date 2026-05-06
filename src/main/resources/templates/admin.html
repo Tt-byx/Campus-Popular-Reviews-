@@ -225,6 +225,7 @@
       <button class="tab-btn" data-tab="posts">📝 帖子管理</button>
       <button class="tab-btn" data-tab="targets">🎯 评论对象</button>
       <button class="tab-btn" data-tab="comments">💬 评论管理</button>
+      <button class="tab-btn" data-tab="bannedwords">🚫 违禁词</button>
     </div>
 
     <div id="usersTab">
@@ -278,6 +279,28 @@
         </div>
       </div>
     </div>
+
+    <div id="bannedwordsTab" class="d-none">
+      <div class="card mb-3">
+        <div class="card-body p-4">
+          <div class="d-flex gap-2">
+            <input type="text" id="newBannedWord" class="form-control" placeholder="输入违禁词，按回车添加..." style="border-radius:10px;border:1.5px solid #e0e0e0;padding:8px 16px" />
+            <button class="btn btn-primary" style="border-radius:10px;padding:8px 20px;white-space:nowrap" onclick="addBannedWord()">添加</button>
+          </div>
+          <div style="font-size:0.82rem;color:var(--apple-secondary);margin-top:8px">添加后，帖子标题/内容、评论对象名称、评论内容中包含违禁词将不允许发布</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr>
+              <th>ID</th><th>违禁词</th><th>添加时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="bannedWordsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -290,7 +313,7 @@
     const role = localStorage.getItem('role') || 'user';
 
     if (!token) { location.href = '/browse-post'; return; }
-    if (role !== 'admin') {
+    if (role !== 'admin' && role !== 'super_admin') {
       document.getElementById('accessDenied').classList.remove('d-none');
       document.getElementById('adminContent').style.display = 'none';
       renderNavButtons();
@@ -333,12 +356,29 @@
         document.getElementById('postsTab').classList.toggle('d-none', tab !== 'posts');
         document.getElementById('targetsTab').classList.toggle('d-none', tab !== 'targets');
         document.getElementById('commentsTab').classList.toggle('d-none', tab !== 'comments');
+        document.getElementById('bannedwordsTab').classList.toggle('d-none', tab !== 'bannedwords');
         if (tab === 'targets' && !targetsLoaded) { loadTargets(); targetsLoaded = true; }
         if (tab === 'comments' && !commentsLoaded) { loadComments(); commentsLoaded = true; }
+        if (tab === 'bannedwords' && !bannedWordsLoaded) { loadBannedWords(); bannedWordsLoaded = true; }
       };
     });
 
-    let targetsLoaded = false, commentsLoaded = false;
+    let targetsLoaded = false, commentsLoaded = false, bannedWordsLoaded = false;
+    let currentRole = 'admin';
+
+    const fetchRole = async () => {
+      try {
+        const res = await fetch('/admin/role', { headers });
+        const result = await res.json();
+        if (result.code === 200) currentRole = result.data;
+      } catch(e) {}
+    };
+
+    const roleLabel = (role) => {
+      if (role === 'super_admin') return '<span class="badge-role-admin" style="background:#ff4757;color:#fff">超级管理员</span>';
+      if (role === 'admin') return '<span class="badge-role-admin">管理员</span>';
+      return '<span class="badge-role-user">用户</span>';
+    };
 
     // Load users
     const loadUsers = async () => {
@@ -349,18 +389,30 @@
         if (result.code === 200 && result.data.length) {
           body.innerHTML = result.data.map(u => {
             const isSelf = u.username === username;
+            const isSuperAdmin = u.role === 'super_admin';
+            let actions = '';
+            if (isSelf) {
+              actions = '<span style="color:var(--apple-secondary);font-size:0.82rem">—</span>';
+            } else if (isSuperAdmin) {
+              actions = '<span style="color:var(--apple-secondary);font-size:0.82rem">超级管理员</span>';
+            } else {
+              actions = `<button class="btn-action btn-mute" onclick="toggleMute('${u.username}', '${u.status}')">${u.status === 'muted' ? '解除禁言' : '禁言'}</button>
+                <button class="btn-action btn-delete" onclick="deleteUser('${u.username}')">注销账号</button>`;
+              if (currentRole === 'super_admin') {
+                if (u.role === 'admin') {
+                  actions += ` <button class="btn-action" style="background:#ff6b6b;color:#fff" onclick="demoteUser('${u.username}')">剥夺管理员</button>`;
+                } else {
+                  actions += ` <button class="btn-action" style="background:#2ed573;color:#fff" onclick="promoteUser('${u.username}')">设为管理员</button>`;
+                }
+              }
+            }
             return `<tr>
               <td><img class="avatar-sm" src="${u.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username)}" alt=""></td>
               <td><strong>${u.username}</strong>${isSelf ? ' <span style="font-size:0.75rem;color:var(--apple-secondary)">(你)</span>' : ''}</td>
-              <td><span class="${u.role === 'admin' ? 'badge-role-admin' : 'badge-role-user'}">${u.role === 'admin' ? '管理员' : '用户'}</span></td>
+              <td>${roleLabel(u.role)}</td>
               <td><span class="${u.status === 'muted' ? 'badge-status-muted' : 'badge-status-active'}">${u.status === 'muted' ? '已禁言' : '正常'}</span></td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${u.createdAt ? u.createdAt.split('T')[0] : '-'}</td>
-              <td>
-                ${isSelf ? '<span style="color:var(--apple-secondary);font-size:0.82rem">—</span>' : `
-                  <button class="btn-action btn-mute" onclick="toggleMute('${u.username}', '${u.status}')">${u.status === 'muted' ? '解除禁言' : '禁言'}</button>
-                  <button class="btn-action btn-delete" onclick="deleteUser('${u.username}')">注销账号</button>
-                `}
-              </td>
+              <td style="color:var(--apple-secondary);font-size:0.85rem">${u.createdAt ? (u.createdAt.includes('T') ? u.createdAt.split('T')[0] : u.createdAt.split(' ')[0]) : '-'}</td>
+              <td>${actions}</td>
             </tr>`;
           }).join('');
           document.getElementById('statUsers').textContent = result.data.length;
@@ -414,7 +466,27 @@
       try {
         const res = await fetch(`/admin/user/${uname}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadUsers(); }
+        if (result.code === 200) { loadUsers(); alert('✅ 用户已注销'); }
+        else { alert(result.message || '操作失败'); }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    window.promoteUser = async (uname) => {
+      if (!confirm(`确定要将用户「${uname}」升级为管理员吗？`)) return;
+      try {
+        const res = await fetch(`/admin/user/${uname}/promote`, { method: 'POST', headers });
+        const result = await res.json();
+        if (result.code === 200) { loadUsers(); alert('✅ 已升级为管理员'); }
+        else { alert(result.message || '操作失败'); }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    window.demoteUser = async (uname) => {
+      if (!confirm(`确定要剥夺用户「${uname}」的管理员权限吗？`)) return;
+      try {
+        const res = await fetch(`/admin/user/${uname}/demote`, { method: 'POST', headers });
+        const result = await res.json();
+        if (result.code === 200) { loadUsers(); alert('✅ 已剥夺管理员权限'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
@@ -523,9 +595,70 @@
       } catch(e) { alert('网络错误'); }
     };
 
+    // Load banned words
+    const loadBannedWords = async () => {
+      try {
+        const res = await fetch('/admin/banned-words', { headers });
+        const result = await res.json();
+        const body = document.getElementById('bannedWordsTableBody');
+        if (result.code === 200 && result.data && result.data.length) {
+          body.innerHTML = result.data.map(w => `
+            <tr>
+              <td style="color:var(--apple-secondary)">${w.id}</td>
+              <td><strong style="color:var(--apple-red)">${w.word}</strong></td>
+              <td style="color:var(--apple-secondary);font-size:0.85rem">${w.createdAt ? w.createdAt.split(' ')[0] : '-'}</td>
+              <td><button class="btn-action btn-delete" onclick="deleteBannedWord(${w.id}, '${w.word}')">删除</button></td>
+            </tr>`).join('');
+        } else {
+          body.innerHTML = '<tr><td colspan="4" class="empty-state">暂无违禁词，请添加</td></tr>';
+        }
+      } catch(e) {
+        console.error(e);
+        document.getElementById('bannedWordsTableBody').innerHTML = '<tr><td colspan="4" class="empty-state">加载失败</td></tr>';
+      }
+    };
+
+    window.addBannedWord = async () => {
+      const input = document.getElementById('newBannedWord');
+      const word = input.value.trim();
+      if (!word) { alert('请输入违禁词'); return; }
+      try {
+        const res = await fetch('/admin/banned-words', {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          input.value = '';
+          loadBannedWords();
+        } else {
+          alert(result.message || '添加失败');
+        }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    window.deleteBannedWord = async (id, word) => {
+      if (!confirm(`确定要删除违禁词「${word}」吗？`)) return;
+      try {
+        const res = await fetch(`/admin/banned-words/${id}`, { method: 'DELETE', headers });
+        const result = await res.json();
+        if (result.code === 200) { loadBannedWords(); }
+        else { alert(result.message || '操作失败'); }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    document.getElementById('newBannedWord').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.addBannedWord();
+    });
+
     renderNavButtons();
-    loadUsers();
-    loadPosts();
+    fetchRole().then(() => {
+      loadUsers();
+      loadPosts();
+      loadTargets();
+      loadComments();
+    });
   })();
 </script>
 </body>

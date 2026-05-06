@@ -154,7 +154,7 @@ private CommentUserMapper commentUserMapper;
         if (user == null) {
             return Result.fail("用户不存在");
         }
-        if ("admin".equals(user.getRole())) {
+        if ("admin".equals(user.getRole()) || "super_admin".equals(user.getRole())) {
             return Result.fail("无法禁言管理员账号");
         }
         String newStatus = "muted".equals(user.getStatus()) ? "active" : "muted";
@@ -169,7 +169,7 @@ private CommentUserMapper commentUserMapper;
         if (user == null) {
             return Result.fail("用户不存在");
         }
-        if ("admin".equals(user.getRole())) {
+        if ("admin".equals(user.getRole()) || "super_admin".equals(user.getRole())) {
             return Result.fail("无法删除管理员账号");
         }
         removeById(user.getId());
