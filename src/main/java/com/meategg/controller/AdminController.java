@@ -53,13 +53,33 @@ public class AdminController {
     public Result deletePost(@PathVariable Long postId, HttpServletRequest request) {
         if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
 
-        Object usernameAttr = request.getAttribute("username");
-        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
-        if (username == null) {
-            return Result.fail(401, "请先登录");
-        }
+        return postService.adminDeletePost(postId);
+    }
 
-        return postService.deletePost(postId, username);
+    @GetMapping("/review-targets")
+    public Result listReviewTargets(HttpServletRequest request) {
+        if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
+        return postService.listAllReviewTargets();
+    }
+
+    @DeleteMapping("/review-target/{targetId}")
+    public Result deleteReviewTarget(@PathVariable Long targetId, HttpServletRequest request) {
+        if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
+
+        return postService.adminDeleteReviewTarget(targetId);
+    }
+
+    @GetMapping("/comments")
+    public Result listComments(HttpServletRequest request) {
+        if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
+        return postService.listAllComments();
+    }
+
+    @DeleteMapping("/comment/{commentId}")
+    public Result deleteComment(@PathVariable Long commentId, HttpServletRequest request) {
+        if (!isAdmin(request)) return Result.fail(403, "无管理员权限");
+
+        return postService.adminDeleteComment(commentId);
     }
 }
 //1

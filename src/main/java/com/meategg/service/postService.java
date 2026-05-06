@@ -36,6 +36,16 @@ public interface postService extends IService<Post> {
 
     Result listAllPosts();
 
+    Result adminDeletePost(Long postId);
+
+    Result adminDeleteReviewTarget(Long targetId);
+
+    Result adminDeleteComment(Long commentId);
+
+    Result listAllReviewTargets();
+
+    Result listAllComments();
+
     Result getPostStats(Long postId);
 
     Result getReviewTargetStats(Long targetId);

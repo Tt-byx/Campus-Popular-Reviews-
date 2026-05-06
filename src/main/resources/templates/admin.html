@@ -211,18 +211,20 @@
         <div class="stat-label">总帖子数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="statAdmins">-</div>
-        <div class="stat-label">管理员数</div>
+        <div class="stat-num" id="statTargets">-</div>
+        <div class="stat-label">评论对象</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="statMuted">-</div>
-        <div class="stat-label">已禁言</div>
+        <div class="stat-num" id="statComments">-</div>
+        <div class="stat-label">总评论数</div>
       </div>
     </div>
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="users">👥 用户管理</button>
       <button class="tab-btn" data-tab="posts">📝 帖子管理</button>
+      <button class="tab-btn" data-tab="targets">🎯 评论对象</button>
+      <button class="tab-btn" data-tab="comments">💬 评论管理</button>
     </div>
 
     <div id="usersTab">
@@ -246,6 +248,32 @@
               <th>ID</th><th>标题</th><th>作者</th><th>标签</th><th>发布时间</th><th>操作</th>
             </tr></thead>
             <tbody id="postsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="targetsTab" class="d-none">
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr>
+              <th>ID</th><th>对象名称</th><th>所属帖子</th><th>帖子作者</th><th>评论数</th><th>创建时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="targetsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="commentsTab" class="d-none">
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr>
+              <th>ID</th><th>评论者</th><th>内容</th><th>评分</th><th>所属对象</th><th>所属帖子</th><th>时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="commentsTableBody"></tbody>
           </table>
         </div>
       </div>
@@ -300,10 +328,17 @@
       btn.onclick = () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('usersTab').classList.toggle('d-none', btn.dataset.tab !== 'users');
-        document.getElementById('postsTab').classList.toggle('d-none', btn.dataset.tab !== 'posts');
+        const tab = btn.dataset.tab;
+        document.getElementById('usersTab').classList.toggle('d-none', tab !== 'users');
+        document.getElementById('postsTab').classList.toggle('d-none', tab !== 'posts');
+        document.getElementById('targetsTab').classList.toggle('d-none', tab !== 'targets');
+        document.getElementById('commentsTab').classList.toggle('d-none', tab !== 'comments');
+        if (tab === 'targets' && !targetsLoaded) { loadTargets(); targetsLoaded = true; }
+        if (tab === 'comments' && !commentsLoaded) { loadComments(); commentsLoaded = true; }
       };
     });
+
+    let targetsLoaded = false, commentsLoaded = false;
 
     // Load users
     const loadUsers = async () => {
@@ -312,10 +347,7 @@
         const result = await res.json();
         const body = document.getElementById('usersTableBody');
         if (result.code === 200 && result.data.length) {
-          let admins = 0, muted = 0;
           body.innerHTML = result.data.map(u => {
-            if (u.role === 'admin') admins++;
-            if (u.status === 'muted') muted++;
             const isSelf = u.username === username;
             return `<tr>
               <td><img class="avatar-sm" src="${u.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username)}" alt=""></td>
@@ -332,10 +364,9 @@
             </tr>`;
           }).join('');
           document.getElementById('statUsers').textContent = result.data.length;
-          document.getElementById('statAdmins').textContent = admins;
-          document.getElementById('statMuted').textContent = muted;
         } else {
           body.innerHTML = '<tr><td colspan="6" class="empty-state">暂无用户数据</td></tr>';
+          document.getElementById('statUsers').textContent = '0';
         }
       } catch(e) { console.error(e); }
     };
@@ -362,6 +393,7 @@
             </tr>`).join('');
         } else {
           body.innerHTML = '<tr><td colspan="6" class="empty-state">暂无帖子数据</td></tr>';
+          document.getElementById('statPosts').textContent = '0';
         }
       } catch(e) { console.error(e); }
     };
@@ -388,11 +420,105 @@
     };
 
     window.deletePost = async (pid) => {
-      if (!confirm('确定要删除该帖子吗？')) return;
+      if (!confirm('⚠️ 确定要删除该帖子吗？\n\n这将同时删除该帖子的所有评论对象和评论！')) return;
       try {
         const res = await fetch(`/admin/post/${pid}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadPosts(); }
+        if (result.code === 200) { loadPosts(); alert('✅ ' + result.message); }
+        else { alert(result.message || '操作失败'); }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    // Load review targets
+    const loadTargets = async () => {
+      console.log('🎯 [DEBUG] 开始加载评论对象...');
+      try {
+        console.log('🎯 [DEBUG] 请求URL: /admin/review-targets');
+        console.log('🎯 [DEBUG] Headers:', headers);
+        const res = await fetch('/admin/review-targets', { headers });
+        console.log('🎯 [DEBUG] 响应状态:', res.status);
+        const result = await res.json();
+        console.log('🎯 [DEBUG] API返回数据:', result);
+        const body = document.getElementById('targetsTableBody');
+        if (result.code === 200 && result.data && result.data.length) {
+          document.getElementById('statTargets').textContent = result.data.length;
+          body.innerHTML = result.data.map(t => `
+            <tr>
+              <td style="color:var(--apple-secondary)">${t.id}</td>
+              <td><strong>${t.targetName}</strong></td>
+              <td><a href="/post-detail?id=${t.postId}" style="color:var(--apple-blue);text-decoration:none">${t.postTitle}</a></td>
+              <td>${t.postAuthor}</td>
+              <td><span class="badge bg-info text-dark">${t.commentCount} 条</span></td>
+              <td style="color:var(--apple-secondary);font-size:0.85rem">${t.createdAt ? t.createdAt.split('T')[0] : '-'}</td>
+              <td>
+                <a href="/review-target-detail?id=${t.id}" class="btn-action btn-view">查看</a>
+                <button class="btn-action btn-delete" onclick="deleteTarget(${t.id}, '${t.targetName}')">删除</button>
+              </td>
+            </tr>`).join('');
+          console.log(`✅ 🎯 成功加载 ${result.data.length} 条评论对象`);
+        } else {
+          body.innerHTML = '<tr><td colspan="7" class="empty-state">暂无评论对象数据</td></tr>';
+          document.getElementById('statTargets').textContent = '0';
+          console.log('⚠️ 🎯 评论对象数据为空或格式异常:', result);
+        }
+      } catch(e) {
+        console.error('❌ 🎯 加载评论对象失败:', e);
+        document.getElementById('targetsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+      }
+    };
+
+    // Load comments
+    const loadComments = async () => {
+      console.log('💬 [DEBUG] 开始加载评论...');
+      try {
+        console.log('💬 [DEBUG] 请求URL: /admin/comments');
+        console.log('💬 [DEBUG] Headers:', headers);
+        const res = await fetch('/admin/comments', { headers });
+        console.log('💬 [DEBUG] 响应状态:', res.status);
+        const result = await res.json();
+        console.log('💬 [DEBUG] API返回数据:', result);
+        const body = document.getElementById('commentsTableBody');
+        if (result.code === 200 && result.data && result.data.length) {
+          document.getElementById('statComments').textContent = result.data.length;
+          body.innerHTML = result.data.map(c => `
+            <tr>
+              <td style="color:var(--apple-secondary)">${c.id}</td>
+              <td><strong>${c.username}</strong></td>
+              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.content || '-'}</td>
+              <td>${c.score != null ? `⭐ ${c.score}` : '<span style="color:var(--apple-secondary)">未评分</span>'}</td>
+              <td><a href="/review-target-detail?id=${c.reviewTargetId}" style="color:var(--apple-blue);text-decoration:none;font-size:0.85rem">${c.targetName}</a></td>
+              <td><a href="/post-detail?id=${c.postId}" style="color:var(--apple-secondary);text-decoration:none;font-size:0.85rem">${c.postTitle}</a></td>
+              <td style="color:var(--apple-secondary);font-size:0.85rem">${c.createdAt ? c.createdAt.split('T')[0] : '-'}</td>
+              <td><button class="btn-action btn-delete" onclick="deleteComment(${c.id})">删除</button></td>
+            </tr>`).join('');
+          console.log(`✅ 💬 成功加载 ${result.data.length} 条评论`);
+        } else {
+          body.innerHTML = '<tr><td colspan="8" class="empty-state">暂无评论数据</td></tr>';
+          document.getElementById('statComments').textContent = '0';
+          console.log('⚠️ 💬 评论数据为空或格式异常:', result);
+        }
+      } catch(e) {
+        console.error('❌ 💬 加载评论失败:', e);
+        document.getElementById('commentsTableBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>';
+      }
+    };
+
+    window.deleteTarget = async (targetId, targetName) => {
+      if (!confirm(`⚠️ 确定要删除评论对象「${targetName}」吗？\n\n这将同时删除该对象下的所有评论！`)) return;
+      try {
+        const res = await fetch(`/admin/review-target/${targetId}`, { method: 'DELETE', headers });
+        const result = await res.json();
+        if (result.code === 200) { loadTargets(); alert('✅ ' + result.message); }
+        else { alert(result.message || '操作失败'); }
+      } catch(e) { alert('网络错误'); }
+    };
+
+    window.deleteComment = async (commentId) => {
+      if (!confirm('确定要删除这条评论吗？')) return;
+      try {
+        const res = await fetch(`/admin/comment/${commentId}`, { method: 'DELETE', headers });
+        const result = await res.json();
+        if (result.code === 200) { loadComments(); alert('✅ 评论已删除'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
