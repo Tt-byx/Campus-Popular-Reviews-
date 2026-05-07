@@ -245,7 +245,7 @@
             return;
         }
         list.innerHTML = items.map(item => `
-      <div class="card post-card" onclick="location.href='/post-detail?id=${item.id}'">
+      <div class="card post-card" onclick="location.href='/post-detail?id=${item.id}&from=categories'">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-start">
             <div class="post-title">${item.title}</div>

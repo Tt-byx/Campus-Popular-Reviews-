@@ -69,9 +69,11 @@
   <div class="d-flex justify-content-between align-items-center mb-5">
     <div>
         <h1 class="h3 m-0 fw-bold">对象详情</h1>
-        <a id="backToPost" href="javascript:history.back()" class="text-decoration-none small" style="color: var(--apple-blue);">← 返回帖子</a>
     </div>
-    <div class="d-flex gap-3 align-items-center" id="navButtons"></div>
+    <div class="d-flex gap-3 align-items-center">
+        <button id="backToPost" class="btn btn-outline-secondary back-btn" onclick="handleBackToPost()">← 返回帖子</button>
+        <div id="navButtons"></div>
+    </div>
   </div>
 
   <div id="msg" class="alert d-none" role="alert"></div>
@@ -184,6 +186,7 @@
     let selectedScore = 0;
 
     const getTargetId = () => new URLSearchParams(window.location.search).get('id');
+    const getSource = () => new URLSearchParams(window.location.search).get('from') || '';
     const setMsg = (el, text, type) => { if(el) { el.className = 'alert d-block alert-' + type + ' py-2 small'; el.textContent = text; } };
 
     const SCORE_LABELS = { 1: '拉完了', 2: 'NPC', 3: '人上人', 4: '顶级', 5: '夯' };
@@ -201,7 +204,6 @@
       const role = localStorage.getItem('role') || 'user';
       if (token) {
         navButtons.innerHTML = `
-          <a class="btn btn-outline-primary btn-sm rounded-pill px-3" id="backToPostBtn" href="#">返回帖子</a>
           <div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'">
             <div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div>
             <span class="fw-medium">${username}</span>
@@ -244,6 +246,7 @@
 
     const loadTargetDetail = async () => {
       const targetId = getTargetId();
+      const source = getSource();
       const headers = {};
       if (token) headers['Authorization'] = `${tokenType} ${token}`;
       try {
@@ -253,7 +256,10 @@
           const data = result.data;
           document.getElementById('targetName').textContent = data.targetName;
           document.getElementById('postInfo').textContent = `所属帖子：${data.postTitle}`;
-          document.getElementById('backToPost').href = `/post-detail?id=${data.postId}`;
+
+          const backToPostBtn = document.getElementById('backToPost');
+          backToPostBtn.dataset.postId = data.postId;
+          backToPostBtn.dataset.source = source;
 
           const comments = data.comments || [];
           const commentCount = comments.length;
@@ -280,6 +286,26 @@
           `).join('');
         }
       } catch (e) { console.error(e); }
+    };
+
+    window.handleBackToPost = () => {
+      const backToPostBtn = document.getElementById('backToPost');
+      const postId = backToPostBtn.dataset.postId;
+      const source = backToPostBtn.dataset.source;
+
+      if (!postId) {
+        location.href = '/browse-post';
+        return;
+      }
+
+      let url = `/post-detail?id=${postId}`;
+      if (source === 'search') {
+        url += '&from=search';
+      } else if (source === 'admin') {
+        url += '&from=admin';
+      }
+
+      location.href = url;
     };
 
     document.getElementById('starRating').addEventListener('click', (e) => {

@@ -439,7 +439,7 @@
               <td>${p.tag ? `<span style="background:#f0f0f2;padding:2px 8px;border-radius:4px;font-size:0.8rem">#${p.tag}</span>` : '<span style="color:var(--apple-secondary)">—</span>'}</td>
               <td style="color:var(--apple-secondary);font-size:0.85rem">${p.createdAt ? p.createdAt.split('T')[0] : '-'}</td>
               <td>
-                <a href="/post-detail?id=${p.id}" class="btn-action btn-view">查看</a>
+                <a href="/post-detail?id=${p.id}&from=admin" class="btn-action btn-view">查看</a>
                 <button class="btn-action btn-delete" onclick="deletePost(${p.id})">删除</button>
               </td>
             </tr>`).join('');
@@ -518,15 +518,16 @@
             <tr>
               <td style="color:var(--apple-secondary)">${t.id}</td>
               <td><strong>${t.targetName}</strong></td>
-              <td><a href="/post-detail?id=${t.postId}" style="color:var(--apple-blue);text-decoration:none">${t.postTitle}</a></td>
+              <td><a href="/post-detail?id=${t.postId}&from=admin" style="color:var(--apple-blue);text-decoration:none">${t.postTitle}</a></td>
               <td>${t.postAuthor}</td>
               <td><span class="badge bg-info text-dark">${t.commentCount} 条</span></td>
               <td style="color:var(--apple-secondary);font-size:0.85rem">${t.createdAt ? t.createdAt.split('T')[0] : '-'}</td>
               <td>
-                <a href="/review-target-detail?id=${t.id}" class="btn-action btn-view">查看</a>
+                <a href="/review-target-detail?id=${t.id}&from=admin" class="btn-action btn-view">查看</a>
                 <button class="btn-action btn-delete" onclick="deleteTarget(${t.id}, '${t.targetName}')">删除</button>
               </td>
             </tr>`).join('');
+
           console.log(`✅ 🎯 成功加载 ${result.data.length} 条评论对象`);
         } else {
           body.innerHTML = '<tr><td colspan="7" class="empty-state">暂无评论对象数据</td></tr>';
@@ -558,8 +559,8 @@
               <td><strong>${c.username}</strong></td>
               <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.content || '-'}</td>
               <td>${c.score != null ? `⭐ ${c.score}` : '<span style="color:var(--apple-secondary)">未评分</span>'}</td>
-              <td><a href="/review-target-detail?id=${c.reviewTargetId}" style="color:var(--apple-blue);text-decoration:none;font-size:0.85rem">${c.targetName}</a></td>
-              <td><a href="/post-detail?id=${c.postId}" style="color:var(--apple-secondary);text-decoration:none;font-size:0.85rem">${c.postTitle}</a></td>
+              <td><a href="/review-target-detail?id=${c.reviewTargetId}&from=admin" style="color:var(--apple-blue);text-decoration:none;font-size:0.85rem">${c.targetName}</a></td>
+              <td><a href="/post-detail?id=${c.postId}&from=admin" style="color:var(--apple-secondary);text-decoration:none;font-size:0.85rem">${c.postTitle}</a></td>
               <td style="color:var(--apple-secondary);font-size:0.85rem">${c.createdAt ? c.createdAt.split('T')[0] : '-'}</td>
               <td><button class="btn-action btn-delete" onclick="deleteComment(${c.id})">删除</button></td>
             </tr>`).join('');

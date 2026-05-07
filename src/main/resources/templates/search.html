@@ -151,6 +151,19 @@
   if (keyword) {
     document.getElementById('searchInput').value = keyword;
     performSearch();
+  } else {
+    const savedKeyword = sessionStorage.getItem('lastSearchKeyword');
+    const savedResults = sessionStorage.getItem('lastSearchResults');
+
+    if (savedKeyword && savedResults) {
+      document.getElementById('searchInput').value = savedKeyword;
+      try {
+        const data = JSON.parse(savedResults);
+        renderResults(data);
+      } catch(e) {
+        console.error('解析缓存结果失败:', e);
+      }
+    }
   }
 
   document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -173,6 +186,8 @@
       const result = await response.json();
 
       if (result.code === 200) {
+        sessionStorage.setItem('lastSearchKeyword', keyword);
+        sessionStorage.setItem('lastSearchResults', JSON.stringify(result.data));
         renderResults(result.data);
       } else {
         showError(result.message || '搜索失败');
@@ -218,7 +233,7 @@
             帖子 (${posts.length})
           </div>
           ${posts.map(post => `
-            <div class="card result-card" onclick="location.href='/post-detail?id=${post.id}'">
+            <div class="card result-card" onclick="location.href='/post-detail?id=${post.id}&from=search'">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start">
                   <div class="result-title">${highlightKeyword(post.title, '${keyword}')}</div>
@@ -247,7 +262,7 @@
             评论对象 (${reviewTargets.length})
           </div>
           ${reviewTargets.map(target => `
-            <div class="card result-card" onclick="location.href='/review-target-detail?id=${target.id}'">
+            <div class="card result-card" onclick="location.href='/review-target-detail?id=${target.id}&from=search'">
               <div class="card-body p-4">
                 <div class="result-title">${highlightKeyword(target.targetName, '${keyword}')}</div>
                 <div class="meta mt-1">所属帖子：${target.postTitle}</div>
