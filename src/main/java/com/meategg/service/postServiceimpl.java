@@ -193,6 +193,15 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             return Result.fail("评论对象名称包含违禁词「" + bannedWord + "」，请修改后重新发布");
         }
 
+        Integer existCount = reviewTargetMapper.selectCount(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                        .eq("post_id", postId)
+                        .eq("target_name", targetName.trim())
+        );
+        if (existCount > 0) {
+            return Result.fail("该帖子下已存在同名评论对象，请使用其他名称");
+        }
+
         Post post = postMapper.selectById(postId);
         if (post == null) {
             return Result.fail("帖子不存在");
@@ -396,6 +405,15 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
                 .last("limit 1"));
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
+        }
+
+        Integer existingCount = commentUserMapper.selectCount(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("review_target_id", reviewTargetId)
+                        .eq("username", username.trim())
+        );
+        if (existingCount > 0) {
+            return Result.fail("您已经评论过该对象，每个用户只能评论一次");
         }
 
         CommentUser commentUser = new CommentUser();

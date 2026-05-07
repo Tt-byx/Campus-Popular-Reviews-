@@ -335,6 +335,7 @@
         const res = await fetch(`/post/${postId}/review-target`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `${tokenType} ${token}` }, body: JSON.stringify({ targetName: name }) });
         const result = await res.json();
         if (result.code === 200) { hideAddTarget(); loadReviewTargets(); }
+        else { alert(result.message || '创建失败'); }
     });
 
     const setupBackButton = () => {

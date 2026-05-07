@@ -340,6 +340,7 @@
         });
         const result = await res.json();
         if (result.code === 200) { location.reload(); }
+        else { alert(result.message || '操作失败'); }
     });
 
     const loadScoreDist = async () => {
