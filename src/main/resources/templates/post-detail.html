@@ -234,7 +234,6 @@
     window.showRegisterPrompt = () => registerModal.show();
     window.handleLogout = () => { if (confirm('确定要退出登录吗？')) { localStorage.removeItem('token'); localStorage.removeItem('tokenType'); localStorage.removeItem('username'); localStorage.removeItem('role'); location.reload(); } };
 
-    <!-- ... existing code ... -->
     const renderNavButtons = () => {
       const role = localStorage.getItem('role') || 'user';
       if (token) {
@@ -294,6 +293,7 @@
 
     const loadReviewTargets = async () => {
       const postId = getPostId();
+      const source = getSource();
       const headers = {};
       if (token) headers['Authorization'] = `${tokenType} ${token}`;
       try {
@@ -307,8 +307,10 @@
             const sb = b.avgScore != null ? b.avgScore : -1;
             return sb - sa;
           });
+
+          const fromParam = source ? `&from=${source}` : '';
           targetList.innerHTML = targets.map(t => `
-            <div class="target-card" onclick="location.href='/review-target-detail?id=${t.id}'">
+            <div class="target-card" onclick="location.href='/review-target-detail?id=${t.id}${fromParam}'">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="target-name">${t.targetName}</div>
                 ${t.avgScore ? `<div class="score-badge" title="平均分 ${t.avgScore.toFixed(1)}">${getScoreLabel(t.avgScore)}</div>` : '<div class="text-muted small">暂无评分</div>'}

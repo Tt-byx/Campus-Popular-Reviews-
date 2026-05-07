@@ -303,6 +303,10 @@
         url += '&from=search';
       } else if (source === 'admin') {
         url += '&from=admin';
+      } else if (source === 'categories') {
+        url += '&from=categories';
+      } else if (source === 'ranking') {
+        url += '&from=ranking';
       }
 
       location.href = url;
