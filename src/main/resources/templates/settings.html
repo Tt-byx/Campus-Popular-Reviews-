@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>设置 - 校圈</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root {
+        --apple-bg: #f5f5f7;
+        --apple-card: #ffffff;
+        --apple-text: #1d1d1f;
+        --apple-secondary: #86868b;
+        --apple-blue: #0066cc;
+        --apple-red: #ff3b30;
+        --apple-radius: 20px;
+        --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
+    }
+    body { background: var(--apple-bg); color: var(--apple-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+
+    .settings-card {
+        border: none;
+        border-radius: 24px;
+        background: var(--apple-card);
+        box-shadow: var(--apple-shadow);
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+
+    .settings-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .settings-section {
+        margin-bottom: 30px;
+    }
+
+    .settings-section-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--apple-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+    }
+
+    .settings-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #f0f0f2;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .settings-item:last-child {
+        border-bottom: none;
+    }
+
+    .settings-item:hover {
+        background: #f9f9f9;
+        margin: 0 -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+        border-radius: 12px;
+    }
+
+    .settings-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .settings-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .settings-item-text {
+        font-weight: 500;
+    }
+
+    .settings-item-desc {
+        font-size: 0.85rem;
+        color: var(--apple-secondary);
+        margin-top: 2px;
+    }
+
+    .settings-arrow {
+        color: var(--apple-secondary);
+        font-size: 1.2rem;
+    }
+
+    .btn-logout {
+        background: var(--apple-red);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-weight: 600;
+        width: 100%;
+        transition: opacity 0.2s;
+    }
+
+    .btn-logout:hover {
+        opacity: 0.9;
+        color: white;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--apple-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+        color: var(--apple-blue);
+        background: rgba(0, 102, 204, 0.06);
+        text-decoration: none;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        background: #e0e0e0;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+        background: var(--apple-blue);
+    }
+
+    .toggle-switch::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch.active::after {
+        transform: translateX(22px);
+    }
+
+    .danger-zone {
+        border: 2px solid var(--apple-red);
+        border-radius: 20px;
+        padding: 24px;
+        margin-top: 30px;
+    }
+
+    .danger-title {
+        color: var(--apple-red);
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mb-5">
+    <a href="javascript:void(0)" onclick="goBack()" class="back-btn" id="backButton">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+      <span id="backText">返回</span>
+
+      <!-- ... existing code ... -->
+    </a>
+  </div>
+
+  <div class="settings-card">
+    <h1 class="settings-title">⚙️ 设置</h1>
+
+    <div class="settings-section">
+      <div class="settings-section-title">账户管理</div>
+
+      <div class="settings-item" onclick="location.href='/profile'">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background: #007aff; color: white;">👤</div>
+          <div>
+            <div class="settings-item-text">个人资料</div>
+            <div class="settings-item-desc">编辑昵称、头像和个性签名</div>
+          </div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">数据管理</div>
+
+      <div class="settings-item" onclick="clearCache()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background: #5ac8fa; color: white;">️</div>
+          <div>
+            <div class="settings-item-text">清除本地缓存</div>
+            <div class="settings-item-desc">清除浏览器本地存储的登录信息</div>
+          </div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+
+      <div class="settings-item" onclick="showAbout()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background: #8e8e93; color: white;">ℹ️</div>
+          <div>
+            <div class="settings-item-text">关于校圈</div>
+            <div class="settings-item-desc">版本信息</div>
+          </div>
+        </div>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="settings-section mt-4">
+      <button class="btn-logout" onclick="handleLogout()">退出登录</button>
+    </div>
+
+    <div class="danger-zone">
+      <div class="danger-title">⚠️ 危险操作</div>
+      <div class="settings-item" onclick="deleteAccount()" style="border-bottom: none; cursor: not-allowed; opacity: 0.6;">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background: #ff3b30; color: white;">🗑️</div>
+          <div>
+            <div class="settings-item-text" style="color: var(--apple-red);">注销账号</div>
+            <div class="settings-item-desc">功能开发中，请联系管理员</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ... existing code ... -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>  (() => {
+    const token = localStorage.getItem('token');
+    const tokenType = localStorage.getItem('tokenType') || 'Bearer';
+    const username = localStorage.getItem('username');
+
+    if (!token) {
+      localStorage.setItem('showLoginMsg', '请先登录后再访问设置');
+      location.href = '/browse-post';
+      return;
+    }
+
+    window.handleLogout = () => {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenType');
+        localStorage.removeItem('username');
+        localStorage.removeItem('role');
+        location.href = '/browse-post';
+      }
+    };
+
+    window.showAbout = () => {
+      alert('校圈 v1.0.0\n\n校园点评社区\n\n功能：\n• 发布校园帖子\n• 评论和评分\n• 个性化推荐\n\n© 2024 Campus Reviews');
+    };
+
+    window.clearCache = () => {
+      if (confirm('确定要清除本地缓存吗？\n\n这将清除：\n• 登录状态\n• 浏览记录\n\n清除后需要重新登录。')) {
+        localStorage.clear();
+        alert('缓存已清除，即将跳转到帖子广场');
+        location.href = '/browse-post';
+      }
+    };
+
+    window.deleteAccount = () => {
+      alert('注销账号功能暂未开放\n\n如需注销账号，请联系管理员');
+    };
+
+    window.goBack = () => {
+      const referrer = document.referrer;
+      if (referrer && referrer.includes(window.location.host)) {
+        if (referrer.includes('/profile')) {
+          location.href = '/profile';
+        } else {
+          history.back();
+        }
+      } else {
+        location.href = '/profile';
+      }
+    };
+
+    const setBackButton = () => {
+      const referrer = document.referrer;
+      const backText = document.getElementById('backText');
+
+      if (referrer && referrer.includes(window.location.host)) {
+        if (referrer.includes('/profile')) {
+          backText.textContent = '返回个人中心';
+        } else {
+          backText.textContent = '返回';
+        }
+      } else {
+        backText.textContent = '返回个人中心';
+      }
+    };
+
+    setBackButton();
+  })();
+  </script>
+</body>
+</html>
