@@ -4,11 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.meategg.DTO.LoginResponse;
 import com.meategg.Utils.JwtUtils;
-import com.meategg.entity.CommentUser;
-import com.meategg.entity.Result;
-import com.meategg.entity.User;
-import com.meategg.mapper.CommentUserMapper;
-import com.meategg.mapper.UserMapper;
+import com.meategg.entity.*;
+import com.meategg.mapper.*;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +16,16 @@ import java.util.Map;
 
 @Service
 public class userServiceimpl extends ServiceImpl<UserMapper, User> implements userService {
-@Resource
-private JwtUtils jwtUtils;
-@Resource
-private CommentUserMapper commentUserMapper;
+    @Resource
+    private JwtUtils jwtUtils;
+    @Resource
+    private CommentUserMapper commentUserMapper;
+    @Resource
+    private PostMapper postMapper;
+    @Resource
+    private ReviewTargetMapper reviewTargetMapper;
+    @Resource
+    private CommentContentMapper commentContentMapper;
 
 
     @Override
@@ -37,17 +40,17 @@ private CommentUserMapper commentUserMapper;
         if ("muted".equals(user.getStatus())) {
             return Result.fail(403, "该账号已被禁言，无法登录");
         }
-        
+
         String role = user.getRole() != null ? user.getRole() : "user";
         String jwt = jwtUtils.createJwt(username, role);
         LoginResponse response = new LoginResponse(
-            jwt,
-            "Bearer",
-            jwtUtils.getExpireInSeconds(),
-            username,
-            role
+                jwt,
+                "Bearer",
+                jwtUtils.getExpireInSeconds(),
+                username,
+                role
         );
-        
+
         return Result.ok(200, "登录成功", response);
     }
 
@@ -57,14 +60,14 @@ private CommentUserMapper commentUserMapper;
         if (existUser != null) {
             return Result.fail("用户已存在");
         }
-        
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
         user.setRole("user");
         user.setStatus("active");
         user.setCreated_at(LocalDateTime.now());
-        
+
         save(user);
         return Result.ok("注册成功");
     }
@@ -175,5 +178,95 @@ private CommentUserMapper commentUserMapper;
         removeById(user.getId());
         return Result.ok(200, "已注销该用户账号", null);
     }
+
+    @Override
+    public Result deleteUserAccount(String username) {
+        // 查找用户
+        User user = query().eq("username", username).one();
+        if (user == null) {
+            return Result.fail("用户不存在");
+        }
+
+        // 检查是否为管理员
+        if ("admin".equals(user.getRole()) || "super_admin".equals(user.getRole())) {
+            return Result.fail("管理员账号不能自行注销，请联系超级管理员");
+        }
+
+        Long userId = Long.valueOf(user.getId());
+
+        // 删除该用户发布的所有帖子
+        List<Post> userPosts = postMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                        .eq("user_id", userId)
+        );
+
+        for (Post post : userPosts) {
+            // 删除帖子关联的评论对象
+            List<ReviewTarget> reviewTargets = reviewTargetMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                            .eq("post_id", post.getId())
+            );
+
+            for (ReviewTarget target : reviewTargets) {
+                // 删除评论对象关联的评论
+                List<CommentUser> comments = commentUserMapper.selectList(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                                .eq("review_target_id", target.getId())
+                );
+
+                for (CommentUser comment : comments) {
+                    // 删除评论内容
+                    commentContentMapper.delete(
+                            com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                                    .eq("comment_id", comment.getId())
+                    );
+                }
+
+                // 删除评论用户记录
+                commentUserMapper.delete(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                                .eq("review_target_id", target.getId())
+                );
+            }
+
+            // 删除评论对象
+            reviewTargetMapper.delete(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
+                            .eq("post_id", post.getId())
+            );
+        }
+
+        // 删除用户的帖子
+        postMapper.delete(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                        .eq("user_id", userId)
+        );
+
+        // 删除用户参与的评论（作为评论者）
+        List<CommentUser> userComments = commentUserMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("username", username)
+        );
+
+        for (CommentUser comment : userComments) {
+            // 删除评论内容
+            commentContentMapper.delete(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentContent>query()
+                            .eq("comment_id", comment.getId())
+            );
+        }
+
+        // 删除评论用户记录
+        commentUserMapper.delete(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
+                        .eq("username", username)
+        );
+
+        // 最后删除用户本身
+        removeById(user.getId());
+
+        return Result.ok(200, "账号已成功注销", null);
+    }
 }
 //1
+

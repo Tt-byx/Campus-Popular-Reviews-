@@ -246,12 +246,12 @@
 
     <div class="danger-zone">
       <div class="danger-title">⚠️ 危险操作</div>
-      <div class="settings-item" onclick="deleteAccount()" style="border-bottom: none; cursor: not-allowed; opacity: 0.6;">
+      <div class="settings-item" onclick="deleteAccount()" style="border-bottom: none;">
         <div class="settings-item-left">
           <div class="settings-icon" style="background: #ff3b30; color: white;">🗑️</div>
           <div>
             <div class="settings-item-text" style="color: var(--apple-red);">注销账号</div>
-            <div class="settings-item-desc">功能开发中，请联系管理员</div>
+            <div class="settings-item-desc">永久删除您的账号及所有数据</div>
           </div>
         </div>
       </div>
@@ -260,76 +260,106 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- ... existing code ... -->
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>  (() => {
-    const token = localStorage.getItem('token');
-    const tokenType = localStorage.getItem('tokenType') || 'Bearer';
-    const username = localStorage.getItem('username');
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>  (() => {
+  const token = localStorage.getItem('token');
+  const tokenType = localStorage.getItem('tokenType') || 'Bearer';
+  const username = localStorage.getItem('username');
 
-    if (!token) {
-      localStorage.setItem('showLoginMsg', '请先登录后再访问设置');
+  if (!token) {
+    localStorage.setItem('showLoginMsg', '请先登录后再访问设置');
+    location.href = '/browse-post';
+    return;
+  }
+
+  window.handleLogout = () => {
+    if (confirm('确定要退出登录吗？')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenType');
+      localStorage.removeItem('username');
+      localStorage.removeItem('role');
       location.href = '/browse-post';
+    }
+  };
+
+  window.showAbout = () => {
+    alert('校圈 v1.0.0\n\n校园点评社区\n\n功能：\n• 发布校园帖子\n• 评论和评分\n• 个性化推荐\n\n© 2024 Campus Reviews');
+  };
+
+  window.clearCache = () => {
+    if (confirm('确定要清除本地缓存吗？\n\n这将清除：\n• 登录状态\n• 浏览记录\n\n清除后需要重新登录。')) {
+      localStorage.clear();
+      alert('缓存已清除，即将跳转到帖子广场');
+      location.href = '/browse-post';
+    }
+  };
+
+  window.deleteAccount = async () => {
+    if (!confirm('⚠️ 警告：此操作不可恢复！\n\n确定要注销您的账号吗？\n\n这将永久删除：\n• 您的用户账户\n• 您发布的所有帖子\n• 您发表的所有评论\n• 您的所有个人数据')) {
       return;
     }
 
-    window.handleLogout = () => {
-      if (confirm('确定要退出登录吗？')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('tokenType');
-        localStorage.removeItem('username');
-        localStorage.removeItem('role');
-        location.href = '/browse-post';
-      }
-    };
+    const doubleConfirm = prompt('请输入您的用户名 "' + username + '" 以确认注销：');
+    if (doubleConfirm !== username) {
+      alert('用户名输入错误，操作已取消');
+      return;
+    }
 
-    window.showAbout = () => {
-      alert('校圈 v1.0.0\n\n校园点评社区\n\n功能：\n• 发布校园帖子\n• 评论和评分\n• 个性化推荐\n\n© 2024 Campus Reviews');
-    };
+    try {
+      const res = await fetch('/user/account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `${tokenType} ${token}`
+        }
+      });
 
-    window.clearCache = () => {
-      if (confirm('确定要清除本地缓存吗？\n\n这将清除：\n• 登录状态\n• 浏览记录\n\n清除后需要重新登录。')) {
+      const result = await res.json();
+
+      if (result.code === 200) {
+        // 清除所有本地存储
         localStorage.clear();
-        alert('缓存已清除，即将跳转到帖子广场');
+        alert('✅ ' + result.message + '\n\n感谢您的使用，再见！');
         location.href = '/browse-post';
-      }
-    };
-
-    window.deleteAccount = () => {
-      alert('注销账号功能暂未开放\n\n如需注销账号，请联系管理员');
-    };
-
-    window.goBack = () => {
-      const referrer = document.referrer;
-      if (referrer && referrer.includes(window.location.host)) {
-        if (referrer.includes('/profile')) {
-          location.href = '/profile';
-        } else {
-          history.back();
-        }
       } else {
+        alert('❌ 操作失败：' + result.message);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('网络错误，请稍后重试');
+    }
+  };
+
+  window.goBack = () => {
+    const referrer = document.referrer;
+    if (referrer && referrer.includes(window.location.host)) {
+      if (referrer.includes('/profile')) {
         location.href = '/profile';
-      }
-    };
-
-    const setBackButton = () => {
-      const referrer = document.referrer;
-      const backText = document.getElementById('backText');
-
-      if (referrer && referrer.includes(window.location.host)) {
-        if (referrer.includes('/profile')) {
-          backText.textContent = '返回个人中心';
-        } else {
-          backText.textContent = '返回';
-        }
       } else {
-        backText.textContent = '返回个人中心';
+        history.back();
       }
-    };
+    } else {
+      location.href = '/profile';
+    }
+  };
 
-    setBackButton();
-  })();
-  </script>
+  const setBackButton = () => {
+    const referrer = document.referrer;
+    const backText = document.getElementById('backText');
+
+    if (referrer && referrer.includes(window.location.host)) {
+      if (referrer.includes('/profile')) {
+        backText.textContent = '返回个人中心';
+      } else {
+        backText.textContent = '返回';
+      }
+    } else {
+      backText.textContent = '返回个人中心';
+    }
+  };
+
+  setBackButton();
+})();
+</script>
 </body>
 </html>

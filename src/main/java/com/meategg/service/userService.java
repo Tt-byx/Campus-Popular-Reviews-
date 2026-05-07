@@ -22,5 +22,7 @@ public interface userService extends IService<User> {
     Result muteUser(String targetUsername);
 
     Result deleteUser(String targetUsername);
+
+    Result deleteUserAccount(String username);
 }
 //1

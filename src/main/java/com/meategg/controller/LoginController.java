@@ -80,5 +80,15 @@ public class LoginController {
             return Result.fail("头像上传失败: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/account")
+    public Result deleteAccount(HttpServletRequest request) {
+        Object usernameAttr = request.getAttribute("username");
+        String username = usernameAttr == null ? null : String.valueOf(usernameAttr).trim();
+        if (username == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return userservice.deleteUserAccount(username);
+    }
 }
 //1
