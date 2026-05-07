@@ -333,7 +333,7 @@
         localStorage.removeItem('tokenType');
         localStorage.removeItem('username');
         localStorage.removeItem('role');
-        location.reload();
+        location.href = '/browse-post';
       }
     };
 
@@ -342,7 +342,7 @@
       nb.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:0.85rem;color:var(--apple-secondary)">${username}</span>
         <span class="badge-role-admin">管理员</span>
-        <button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="handleLogout()">退出</button>
+        <button class="btn btn-outline-secondary btn-sm btn-pill px-3" onclick="location.href='/settings'">⚙️</button>
       </div>`;
     };
 
