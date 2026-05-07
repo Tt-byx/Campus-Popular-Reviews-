@@ -64,5 +64,10 @@ public class PageController {
     public String searchPage() {
         return "search";
     }
+
+    @GetMapping("/settings")
+    public String settingsPage() {
+        return "settings";
+    }
 }
 //1

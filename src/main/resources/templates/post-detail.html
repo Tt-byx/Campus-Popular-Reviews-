@@ -224,7 +224,7 @@
     const navButtons = document.getElementById('navButtons');
     const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
     const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-    
+
     const token = (localStorage.getItem('token') || '').trim();
     const tokenType = (localStorage.getItem('tokenType') || 'Bearer').trim();
     const username = localStorage.getItem('username') || '';
@@ -250,10 +250,11 @@
     window.showRegisterPrompt = () => registerModal.show();
     window.handleLogout = () => { if (confirm('确定要退出登录吗？')) { localStorage.removeItem('token'); localStorage.removeItem('tokenType'); localStorage.removeItem('username'); localStorage.removeItem('role'); location.reload(); } };
 
+    <!-- ... existing code ... -->
     const renderNavButtons = () => {
       const role = localStorage.getItem('role') || 'user';
       if (token) {
-        navButtons.innerHTML = `<div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'"><div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span>${(role === 'admin' || role === 'super_admin') ? ` <a href="/admin" class="btn btn-link btn-sm text-decoration-none p-0" style="color:var(--apple-blue);font-size:0.82rem">🛡️管理</a>` : ''}<button class="btn btn-link btn-sm text-danger text-decoration-none p-0" onclick="event.stopPropagation(); handleLogout()">退出</button></div>`;
+        navButtons.innerHTML = `<div class="user-info" style="cursor: pointer;" onclick="location.href='/profile'"><div class="user-avatar" id="navAvatar">${username ? username.charAt(0).toUpperCase() : 'U'}</div><span class="fw-medium">${username}</span>${(role === 'admin' || role === 'super_admin') ? ` <a href="/admin" class="btn btn-link btn-sm text-decoration-none p-0" style="color:var(--apple-blue);font-size:0.82rem">🛡️管理</a>` : ''} <button class="btn btn-outline-secondary btn-sm btn-pill px-3" onclick="location.href='/settings'">⚙️</button></div>`;
         fetch('/user/profile', { headers: { 'Authorization': `${tokenType} ${token}` } })
           .then(res => res.json())
           .then(res => {
