@@ -355,6 +355,9 @@
         case 'admin':
           backText.textContent = '返回管理后台';
           break;
+        case 'profile':
+          backText.textContent = '返回个人中心';
+          break;
         default:
           backText.textContent = '返回广场';
       }
@@ -374,6 +377,9 @@
           break;
         case 'admin':
           location.href = '/admin';
+          break;
+        case 'profile':
+          location.href = '/profile';
           break;
         default:
           location.href = '/browse-post';
