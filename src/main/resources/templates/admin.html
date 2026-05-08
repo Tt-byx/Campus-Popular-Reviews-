@@ -5,300 +5,287 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>管理中心 - 校圈</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link th:href="@{/css/app.css}" rel="stylesheet" />
   <style>
-    :root {
-        --apple-bg: #f5f5f7;
-        --apple-card: #ffffff;
-        --apple-text: #1d1d1f;
-        --apple-secondary: #86868b;
-        --apple-blue: #0066cc;
-        --apple-red: #ff3b30;
-        --apple-orange: #ff9500;
-        --apple-green: #34c759;
-        --apple-radius: 18px;
-        --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
-    }
-    body { background: var(--apple-bg); color: var(--apple-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    .wrap { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .admin-title { font-weight: 700; font-size: 1.6rem; letter-spacing: -0.02em; color: var(--slate); }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; text-decoration: none; padding: 6px 14px; border-radius: var(--radius-full); transition: all 0.2s; }
+    .back-link:hover { color: var(--sapphire); background: rgba(37, 99, 235, 0.06); text-decoration: none; }
 
-    .admin-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-    .admin-title { font-weight: 700; font-size: 2rem; letter-spacing: -0.02em; }
-    
-    .back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--apple-secondary);
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 500;
-        padding: 6px 14px;
-        border-radius: 20px;
-        transition: all 0.2s ease;
-    }
-    .back-btn:hover {
-        color: var(--apple-blue);
-        background: rgba(0, 102, 204, 0.06);
-        text-decoration: none;
-    }
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-xs); padding: 20px 22px; transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--sapphire); }
+    .stat-label { font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px; }
 
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      background: var(--apple-card);
-      border-radius: 12px;
-      padding: 4px;
-      box-shadow: var(--apple-shadow);
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px 20px;
-      border: none;
-      background: transparent;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      color: var(--apple-secondary);
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--apple-blue);
-      color: white;
-    }
-    .tab-btn:hover:not(.active) { background: #f0f0f2; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 20px; background: var(--card); border-radius: var(--radius-xl); padding: 5px; border: 1px solid var(--border); box-shadow: var(--shadow-xs); }
+    .tab-btn { flex: 1; padding: 10px 14px; border: none; background: transparent; border-radius: var(--radius-lg); font-weight: 600; font-size: 0.88rem; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .tab-btn.active { background: var(--sapphire); color: white; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25); }
+    .tab-btn:hover:not(.active) { background: var(--gray-100); color: var(--slate); }
+    .tab-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    .card {
-      border: none;
-      border-radius: var(--apple-radius);
-      background: var(--apple-card);
-      box-shadow: var(--apple-shadow);
-      overflow: hidden;
-    }
+    .table-card { border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card); box-shadow: var(--shadow-xs); overflow: hidden; }
     .table { margin-bottom: 0; }
-    .table th {
-      background: #fafafa;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--apple-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      border: none;
-      padding: 14px 16px;
-    }
-    .table td {
-      vertical-align: middle;
-      padding: 12px 16px;
-      border-color: #f0f0f2;
-      font-size: 0.92rem;
-    }
-    .table tbody tr:hover { background: #fafafa; }
+    .table th { background: var(--gray-50); font-weight: 600; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; border: none; padding: 13px 16px; }
+    .table td { vertical-align: middle; padding: 12px 16px; border-color: var(--border); font-size: 0.9rem; color: var(--slate); }
+    .table tbody tr:hover { background: var(--gray-50); }
 
-    .badge-role-admin {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-    .badge-role-user {
-      background: #e8e8ed;
-      color: var(--apple-secondary);
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-    .badge-status-active {
-      background: rgba(52,199,89,0.12);
-      color: var(--apple-green);
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-    .badge-status-muted {
-      background: rgba(255,59,48,0.1);
-      color: var(--apple-red);
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
+    .badge-role-admin { background: linear-gradient(135deg, var(--sapphire), var(--teal)); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
+    .badge-role-super { background: linear-gradient(135deg, #DC2626, #EF4444); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
+    .badge-role-user { background: var(--gray-100); color: var(--text-secondary); padding: 3px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
+    .badge-status-active { background: rgba(16, 185, 129, 0.1); color: var(--green); padding: 3px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
+    .badge-status-muted { background: rgba(239, 68, 68, 0.1); color: var(--red); padding: 3px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; }
 
-    .btn-action {
-      padding: 4px 12px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-mute { background: rgba(255,149,0,0.1); color: var(--apple-orange); }
-    .btn-mute:hover { background: var(--apple-orange); color: white; }
-    .btn-delete { background: rgba(255,59,48,0.1); color: var(--apple-red); }
-    .btn-delete:hover { background: var(--apple-red); color: white; }
-    .btn-view { background: rgba(0,102,204,0.08); color: var(--apple-blue); }
-    .btn-view:hover { background: var(--apple-blue); color: white; }
+    .btn-action { padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s; margin: 1px 2px; }
+    .btn-mute { background: rgba(245, 158, 11, 0.1); color: var(--orange); }
+    .btn-mute:hover { background: var(--orange); color: white; }
+    .btn-delete { background: rgba(239, 68, 68, 0.1); color: var(--red); }
+    .btn-delete:hover { background: var(--red); color: white; }
+    .btn-view { background: rgba(37, 99, 235, 0.08); color: var(--sapphire); }
+    .btn-view:hover { background: var(--sapphire); color: white; }
+    .btn-promote { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+    .btn-promote:hover { background: var(--green); color: white; }
+    .btn-demote { background: rgba(239, 68, 68, 0.1); color: #DC2626; }
+    .btn-demote:hover { background: #DC2626; color: white; }
 
-    .avatar-sm {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: #e0e0e0;
-    }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--gray-100); }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .f-input { background: var(--gray-100); border: 1px solid transparent; border-radius: var(--radius-lg); padding: 10px 16px; font-size: 0.9rem; color: var(--text); width: 100%; transition: all 0.2s; }
+    .f-input:focus { outline: none; border-color: var(--sapphire); background: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-    .stat-cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--apple-card);
-      border-radius: var(--apple-radius);
-      box-shadow: var(--apple-shadow);
-      padding: 20px 24px;
-    }
-    .stat-num { font-size: 1.8rem; font-weight: 700; }
-    .stat-label { font-size: 0.82rem; color: var(--apple-secondary); margin-top: 2px; }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--apple-secondary);
-    }
-    .empty-state svg { opacity: 0.3; margin-bottom: 12px; }
-
-    @media (max-width: 768px) {
+    @media (max-width: 968px) {
       .stat-cards { grid-template-columns: repeat(2, 1fr); }
-      .table { font-size: 0.85rem; }
+      .tabs { flex-wrap: wrap; }
+      .tab-btn { flex: 1 1 auto; min-width: 80px; font-size: 0.78rem; }
     }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="admin-header">
-    <div>
-      <h1 class="admin-title">🛡️ 管理中心</h1>
-      <a href="/browse-post" class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> 返回广场</a>
+<div class="bento-container">
+  <aside class="bento-sidebar" id="mainSidebar">
+    <div class="bento-card sidebar-profile-card">
+      <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+      <div class="sidebar-username" id="sidebarUsername">管理员</div>
+      <div class="sidebar-bio" id="sidebarBio">系统管理</div>
     </div>
-    <div id="navButtons"></div>
-  </div>
-
-  <div id="accessDenied" class="card p-5 text-center d-none">
-    <h3 style="color:var(--apple-red)">⚠️ 无权限访问</h3>
-    <p class="text-secondary mt-2">仅管理员可访问此页面</p>
-    <a href="/browse-post" class="btn btn-primary mt-3 rounded-pill px-4">返回首页</a>
-  </div>
-
-  <div id="adminContent">
-    <div class="stat-cards">
-      <div class="stat-card">
-        <div class="stat-num" id="statUsers">-</div>
-        <div class="stat-label">总用户数</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statPosts">-</div>
-        <div class="stat-label">总帖子数</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statTargets">-</div>
-        <div class="stat-label">评论对象</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statComments">-</div>
-        <div class="stat-label">总评论数</div>
-      </div>
+    <div class="bento-card sidebar-nav">
+      <button class="sidebar-nav-item" onclick="location.href='/browse-post'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>首页
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/categories'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>分类
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/ranking'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>排行
+      </button>
+      <button class="sidebar-nav-item active" onclick="location.href='/admin'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>管理
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/profile'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>个人中心
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/settings'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置
+      </button>
+      <button class="sidebar-nav-item" id="sidebarLogoutBtn" style="display:none;color:var(--red)" onclick="handleLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>退出登录
+      </button>
     </div>
-
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="users">👥 用户管理</button>
-      <button class="tab-btn" data-tab="posts">📝 帖子管理</button>
-      <button class="tab-btn" data-tab="targets">🎯 评论对象</button>
-      <button class="tab-btn" data-tab="comments">💬 评论管理</button>
-      <button class="tab-btn" data-tab="bannedwords">🚫 违禁词</button>
-    </div>
-
-    <div id="usersTab">
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr>
-              <th>头像</th><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th>
-            </tr></thead>
-            <tbody id="usersTableBody"></tbody>
-          </table>
+    <div class="bento-card bento-card-sm" id="sidebarLoginArea" style="display:none">
+      <div class="bento-card-body text-center">
+        <p class="text-secondary text-sm m-0">登录以解锁全部功能</p>
+        <div class="flex gap-2 justify-center mt-3">
+          <button class="btn btn-primary btn-sm" onclick="showLoginPrompt()">登录</button>
+          <button class="btn btn-secondary btn-sm" onclick="showRegisterPrompt()">注册</button>
         </div>
       </div>
     </div>
+  </aside>
 
-    <div id="postsTab" class="d-none">
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr>
-              <th>ID</th><th>标题</th><th>作者</th><th>标签</th><th>发布时间</th><th>操作</th>
-            </tr></thead>
-            <tbody id="postsTableBody"></tbody>
-          </table>
-        </div>
+  <script>
+    (function(){
+      var u = localStorage.getItem('username');
+      if (u) {
+        document.getElementById('sidebarUsername').textContent = u;
+        document.getElementById('sidebarAvatar').textContent = u.charAt(0).toUpperCase();
+        document.getElementById('sidebarBio').textContent = '';
+        document.getElementById('sidebarLoginArea').style.display = 'none';
+        document.getElementById('sidebarLogoutBtn').style.display = 'flex';
+      } else {
+        document.getElementById('sidebarLoginArea').style.display = 'block';
+        document.getElementById('sidebarLogoutBtn').style.display = 'none';
+      }
+    })();
+  </script>
+
+  <main class="bento-main">
+    <div class="admin-header">
+      <div>
+        <h1 class="admin-title">管理中心</h1>
+        <a href="/browse-post" class="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> 返回广场
+        </a>
       </div>
     </div>
 
-    <div id="targetsTab" class="d-none">
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr>
-              <th>ID</th><th>对象名称</th><th>所属帖子</th><th>帖子作者</th><th>评论数</th><th>创建时间</th><th>操作</th>
-            </tr></thead>
-            <tbody id="targetsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
+    <div id="accessDenied" class="bento-card p-5 text-center d-none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h3 style="color:var(--red)">无权限访问</h3>
+      <p class="text-secondary mt-2">仅管理员可访问此页面</p>
+      <a href="/browse-post" class="btn btn-primary mt-3">返回首页</a>
     </div>
 
-    <div id="commentsTab" class="d-none">
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr>
-              <th>ID</th><th>评论者</th><th>内容</th><th>评分</th><th>所属对象</th><th>所属帖子</th><th>时间</th><th>操作</th>
-            </tr></thead>
-            <tbody id="commentsTableBody"></tbody>
-          </table>
+    <div id="adminContent">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-num" id="statUsers">-</div>
+          <div class="stat-label">总用户数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statPosts">-</div>
+          <div class="stat-label">总帖子数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statTargets">-</div>
+          <div class="stat-label">评论对象</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statComments">-</div>
+          <div class="stat-label">总评论数</div>
         </div>
       </div>
-    </div>
 
-    <div id="bannedwordsTab" class="d-none">
-      <div class="card mb-3">
-        <div class="card-body p-4">
-          <div class="d-flex gap-2">
-            <input type="text" id="newBannedWord" class="form-control" placeholder="输入违禁词，按回车添加..." style="border-radius:10px;border:1.5px solid #e0e0e0;padding:8px 16px" />
-            <button class="btn btn-primary" style="border-radius:10px;padding:8px 20px;white-space:nowrap" onclick="addBannedWord()">添加</button>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="users">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>用户管理
+        </button>
+        <button class="tab-btn" data-tab="posts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>帖子管理
+        </button>
+        <button class="tab-btn" data-tab="targets">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>评论对象
+        </button>
+        <button class="tab-btn" data-tab="comments">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>评论管理
+        </button>
+        <button class="tab-btn" data-tab="bannedwords">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>违禁词
+        </button>
+      </div>
+
+      <div id="usersTab">
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr>
+                <th>头像</th><th>用户名</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
           </div>
-          <div style="font-size:0.82rem;color:var(--apple-secondary);margin-top:8px">添加后，帖子标题/内容、评论对象名称、评论内容中包含违禁词将不允许发布</div>
         </div>
       </div>
-      <div class="card">
-        <div class="table-responsive">
-          <table class="table">
-            <thead><tr>
-              <th>ID</th><th>违禁词</th><th>添加时间</th><th>操作</th>
-            </tr></thead>
-            <tbody id="bannedWordsTableBody"></tbody>
-          </table>
+
+      <div id="postsTab" class="d-none">
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr>
+                <th>ID</th><th>标题</th><th>作者</th><th>标签</th><th>发布时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="postsTableBody"></tbody>
+            </table>
+          </div>
         </div>
+      </div>
+
+      <div id="targetsTab" class="d-none">
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr>
+                <th>ID</th><th>对象名称</th><th>所属帖子</th><th>帖子作者</th><th>评论数</th><th>创建时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="targetsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="commentsTab" class="d-none">
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr>
+                <th>ID</th><th>评论者</th><th>内容</th><th>评分</th><th>所属对象</th><th>所属帖子</th><th>时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="commentsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="bannedwordsTab" class="d-none">
+        <div class="bento-card mb-3" style="padding:20px 24px">
+          <div class="d-flex gap-2">
+            <input type="text" id="newBannedWord" class="f-input" placeholder="输入违禁词，按回车添加..." />
+            <button class="btn btn-primary" style="white-space:nowrap" onclick="addBannedWord()">添加</button>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-secondary);margin-top:8px">添加后，帖子标题/内容、评论对象名称、评论内容中包含违禁词将不允许发布</div>
+        </div>
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr>
+                <th>ID</th><th>违禁词</th><th>添加时间</th><th>操作</th>
+              </tr></thead>
+              <tbody id="bannedWordsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal fade auth-modal" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="关闭">&times;</button>
+        <h5 class="modal-title">登录</h5>
+        <p class="modal-subtitle">欢迎回到校圈</p>
+      </div>
+      <div class="modal-body">
+        <div id="loginModalMsg" class="alert d-none mb-3" role="alert"></div>
+        <form id="loginForm">
+          <div class="mb-3"><input type="text" id="loginUsername" class="form-control" placeholder="用户名" required></div>
+          <div class="mb-4"><input type="password" id="loginPassword" class="form-control" placeholder="密码" required></div>
+          <button type="submit" class="btn-submit mb-3">登录</button>
+          <div class="text-center" style="font-size:0.88rem"><span class="text-secondary">还没有账号？</span><a href="javascript:void(0)" onclick="switchModal('register')" class="switch-link">立即注册</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade auth-modal" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="关闭">&times;</button>
+        <h5 class="modal-title">注册</h5>
+        <p class="modal-subtitle">加入校圈社区</p>
+      </div>
+      <div class="modal-body">
+        <div id="registerModalMsg" class="alert d-none mb-3" role="alert"></div>
+        <form id="registerForm">
+          <div class="mb-3"><input type="text" id="registerUsername" class="form-control" placeholder="设置用户名" required></div>
+          <div class="mb-4"><input type="password" id="registerPassword" class="form-control" placeholder="设置密码 (至少6位)" required></div>
+          <button type="submit" class="btn-submit mb-3">注册</button>
+          <div class="text-center" style="font-size:0.88rem"><span class="text-secondary">已有账号？</span><a href="javascript:void(0)" onclick="switchModal('login')" class="switch-link">返回登录</a></div>
+        </form>
       </div>
     </div>
   </div>
@@ -307,7 +294,20 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   (() => {
-    const token = localStorage.getItem('token');
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+      const orig = item.getAttribute('onclick');
+      if (!orig || !orig.includes('location.href')) return;
+      item.removeAttribute('onclick');
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const match = orig.match(/location\.href=['"]([^'"]+)['"]/);
+        if (!match) return;
+        document.body.classList.add('page-transitioning');
+        setTimeout(() => { location.href = match[1]; }, 120);
+      });
+    });
+
+    const token = (localStorage.getItem('token') || '').trim();
     const tokenType = localStorage.getItem('tokenType') || 'Bearer';
     const username = localStorage.getItem('username') || '';
     const role = localStorage.getItem('role') || 'user';
@@ -316,16 +316,11 @@
     if (role !== 'admin' && role !== 'super_admin') {
       document.getElementById('accessDenied').classList.remove('d-none');
       document.getElementById('adminContent').style.display = 'none';
-      renderNavButtons();
+      initSidebar();
       return;
     }
 
     const headers = { 'Authorization': `${tokenType} ${token}` };
-
-    const setMsg = (el, text, type) => {
-      el.className = `alert alert-${type} py-2 small`;
-      el.textContent = text;
-    };
 
     window.handleLogout = () => {
       if (confirm('确定要退出登录吗？')) {
@@ -337,16 +332,37 @@
       }
     };
 
-    const renderNavButtons = () => {
-      const nb = document.getElementById('navButtons');
-      nb.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:0.85rem;color:var(--apple-secondary)">${username}</span>
-        <span class="badge-role-admin">管理员</span>
-        <button class="btn btn-outline-secondary btn-sm btn-pill px-3" onclick="location.href='/settings'">⚙️</button>
-      </div>`;
+    const initSidebar = async () => {
+      const sidebarLoginArea = document.getElementById('sidebarLoginArea');
+      const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+      const sidebarAvatar = document.getElementById('sidebarAvatar');
+      const sidebarUsername = document.getElementById('sidebarUsername');
+      const sidebarBio = document.getElementById('sidebarBio');
+
+      sidebarLoginArea.style.display = 'none';
+      sidebarLogoutBtn.style.display = 'flex';
+
+      sidebarUsername.textContent = username;
+      try {
+        const res = await fetch('/user/profile', {
+          headers: { 'Authorization': `${tokenType} ${token}` }
+        });
+        const result = await res.json();
+        if (result.code === 200 && result.data) {
+          const data = result.data;
+          if (data.avatar) {
+            sidebarAvatar.innerHTML = `<img src="${data.avatar}" alt="">`;
+          } else {
+            sidebarAvatar.textContent = (data.username || username).charAt(0).toUpperCase();
+          }
+          sidebarUsername.textContent = data.username || username;
+          sidebarBio.textContent = data.signature || '';
+        }
+      } catch(e) {
+        sidebarAvatar.textContent = username.charAt(0).toUpperCase();
+      }
     };
 
-    // Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -374,13 +390,12 @@
       } catch(e) {}
     };
 
-    const roleLabel = (role) => {
-      if (role === 'super_admin') return '<span class="badge-role-admin" style="background:#ff4757;color:#fff">超级管理员</span>';
-      if (role === 'admin') return '<span class="badge-role-admin">管理员</span>';
+    const roleLabel = (r) => {
+      if (r === 'super_admin') return '<span class="badge-role-super">超级管理员</span>';
+      if (r === 'admin') return '<span class="badge-role-admin">管理员</span>';
       return '<span class="badge-role-user">用户</span>';
     };
 
-    // Load users
     const loadUsers = async () => {
       try {
         const res = await fetch('/admin/users', { headers });
@@ -392,26 +407,26 @@
             const isSuperAdmin = u.role === 'super_admin';
             let actions = '';
             if (isSelf) {
-              actions = '<span style="color:var(--apple-secondary);font-size:0.82rem">—</span>';
+              actions = '<span style="color:var(--text-secondary);font-size:0.82rem">—</span>';
             } else if (isSuperAdmin) {
-              actions = '<span style="color:var(--apple-secondary);font-size:0.82rem">超级管理员</span>';
+              actions = '<span style="color:var(--text-secondary);font-size:0.82rem">超级管理员</span>';
             } else {
               actions = `<button class="btn-action btn-mute" onclick="toggleMute('${u.username}', '${u.status}')">${u.status === 'muted' ? '解除禁言' : '禁言'}</button>
                 <button class="btn-action btn-delete" onclick="deleteUser('${u.username}')">注销账号</button>`;
               if (currentRole === 'super_admin') {
                 if (u.role === 'admin') {
-                  actions += ` <button class="btn-action" style="background:#ff6b6b;color:#fff" onclick="demoteUser('${u.username}')">剥夺管理员</button>`;
+                  actions += ` <button class="btn-action btn-demote" onclick="demoteUser('${u.username}')">剥夺管理员</button>`;
                 } else {
-                  actions += ` <button class="btn-action" style="background:#2ed573;color:#fff" onclick="promoteUser('${u.username}')">设为管理员</button>`;
+                  actions += ` <button class="btn-action btn-promote" onclick="promoteUser('${u.username}')">设为管理员</button>`;
                 }
               }
             }
             return `<tr>
               <td><img class="avatar-sm" src="${u.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username)}" alt=""></td>
-              <td><strong>${u.username}</strong>${isSelf ? ' <span style="font-size:0.75rem;color:var(--apple-secondary)">(你)</span>' : ''}</td>
+              <td><strong>${u.username}</strong>${isSelf ? ' <span style="font-size:0.75rem;color:var(--text-secondary)">(你)</span>' : ''}</td>
               <td>${roleLabel(u.role)}</td>
               <td><span class="${u.status === 'muted' ? 'badge-status-muted' : 'badge-status-active'}">${u.status === 'muted' ? '已禁言' : '正常'}</span></td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${u.createdAt ? (u.createdAt.includes('T') ? u.createdAt.split('T')[0] : u.createdAt.split(' ')[0]) : '-'}</td>
+              <td style="color:var(--text-secondary);font-size:0.85rem">${u.createdAt ? (u.createdAt.includes('T') ? u.createdAt.split('T')[0] : u.createdAt.split(' ')[0]) : '-'}</td>
               <td>${actions}</td>
             </tr>`;
           }).join('');
@@ -423,7 +438,6 @@
       } catch(e) { console.error(e); }
     };
 
-    // Load posts
     const loadPosts = async () => {
       try {
         const res = await fetch('/admin/posts', { headers });
@@ -433,11 +447,11 @@
           document.getElementById('statPosts').textContent = result.data.length;
           body.innerHTML = result.data.map(p => `
             <tr>
-              <td style="color:var(--apple-secondary)">${p.id}</td>
+              <td style="color:var(--text-secondary)">${p.id}</td>
               <td><strong style="max-width:280px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom">${p.title}</strong></td>
               <td>${p.username}</td>
-              <td>${p.tag ? `<span style="background:#f0f0f2;padding:2px 8px;border-radius:4px;font-size:0.8rem">#${p.tag}</span>` : '<span style="color:var(--apple-secondary)">—</span>'}</td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${p.createdAt ? p.createdAt.split('T')[0] : '-'}</td>
+              <td>${p.tag ? `<span style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:0.8rem">#${p.tag}</span>` : '<span style="color:var(--text-secondary)">—</span>'}</td>
+              <td style="color:var(--text-secondary);font-size:0.85rem">${p.createdAt ? p.createdAt.split('T')[0] : '-'}</td>
               <td>
                 <a href="/post-detail?id=${p.id}&from=admin" class="btn-action btn-view">查看</a>
                 <button class="btn-action btn-delete" onclick="deletePost(${p.id})">删除</button>
@@ -450,7 +464,6 @@
       } catch(e) { console.error(e); }
     };
 
-    // Actions
     window.toggleMute = async (uname, currentStatus) => {
       if (!confirm(`确定要${currentStatus === 'muted' ? '解除禁言' : '禁言'}用户「${uname}」吗？`)) return;
       try {
@@ -462,11 +475,11 @@
     };
 
     window.deleteUser = async (uname) => {
-      if (!confirm(`⚠️ 确定要注销用户「${uname}」的账号吗？此操作不可恢复！`)) return;
+      if (!confirm(`确定要注销用户「${uname}」的账号吗？此操作不可恢复！`)) return;
       try {
         const res = await fetch(`/admin/user/${uname}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadUsers(); alert('✅ 用户已注销'); }
+        if (result.code === 200) { loadUsers(); alert('用户已注销'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
@@ -476,7 +489,7 @@
       try {
         const res = await fetch(`/admin/user/${uname}/promote`, { method: 'POST', headers });
         const result = await res.json();
-        if (result.code === 200) { loadUsers(); alert('✅ 已升级为管理员'); }
+        if (result.code === 200) { loadUsers(); alert('已升级为管理员'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
@@ -486,102 +499,85 @@
       try {
         const res = await fetch(`/admin/user/${uname}/demote`, { method: 'POST', headers });
         const result = await res.json();
-        if (result.code === 200) { loadUsers(); alert('✅ 已剥夺管理员权限'); }
+        if (result.code === 200) { loadUsers(); alert('已剥夺管理员权限'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
 
     window.deletePost = async (pid) => {
-      if (!confirm('⚠️ 确定要删除该帖子吗？\n\n这将同时删除该帖子的所有评论对象和评论！')) return;
+      if (!confirm('确定要删除该帖子吗？这将同时删除该帖子的所有评论对象和评论！')) return;
       try {
         const res = await fetch(`/admin/post/${pid}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadPosts(); alert('✅ ' + result.message); }
+        if (result.code === 200) { loadPosts(); alert(result.message); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
 
-    // Load review targets
     const loadTargets = async () => {
-      console.log('🎯 [DEBUG] 开始加载评论对象...');
       try {
-        console.log('🎯 [DEBUG] 请求URL: /admin/review-targets');
-        console.log('🎯 [DEBUG] Headers:', headers);
         const res = await fetch('/admin/review-targets', { headers });
-        console.log('🎯 [DEBUG] 响应状态:', res.status);
         const result = await res.json();
-        console.log('🎯 [DEBUG] API返回数据:', result);
         const body = document.getElementById('targetsTableBody');
         if (result.code === 200 && result.data && result.data.length) {
           document.getElementById('statTargets').textContent = result.data.length;
           body.innerHTML = result.data.map(t => `
             <tr>
-              <td style="color:var(--apple-secondary)">${t.id}</td>
+              <td style="color:var(--text-secondary)">${t.id}</td>
               <td><strong>${t.targetName}</strong></td>
-              <td><a href="/post-detail?id=${t.postId}&from=admin" style="color:var(--apple-blue);text-decoration:none">${t.postTitle}</a></td>
+              <td><a href="/post-detail?id=${t.postId}&from=admin" style="color:var(--sapphire);text-decoration:none">${t.postTitle}</a></td>
               <td>${t.postAuthor}</td>
-              <td><span class="badge bg-info text-dark">${t.commentCount} 条</span></td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${t.createdAt ? t.createdAt.split('T')[0] : '-'}</td>
+              <td><span style="background:rgba(37,99,235,0.1);color:var(--sapphire);padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600">${t.commentCount} 条</span></td>
+              <td style="color:var(--text-secondary);font-size:0.85rem">${t.createdAt ? t.createdAt.split('T')[0] : '-'}</td>
               <td>
                 <a href="/review-target-detail?id=${t.id}&from=admin" class="btn-action btn-view">查看</a>
-                <button class="btn-action btn-delete" onclick="deleteTarget(${t.id}, '${t.targetName}')">删除</button>
+                <button class="btn-action btn-delete" onclick="deleteTarget(${t.id}, '${t.targetName.replace(/'/g, "\\'")}')">删除</button>
               </td>
             </tr>`).join('');
-
-          console.log(`✅ 🎯 成功加载 ${result.data.length} 条评论对象`);
         } else {
           body.innerHTML = '<tr><td colspan="7" class="empty-state">暂无评论对象数据</td></tr>';
           document.getElementById('statTargets').textContent = '0';
-          console.log('⚠️ 🎯 评论对象数据为空或格式异常:', result);
         }
       } catch(e) {
-        console.error('❌ 🎯 加载评论对象失败:', e);
+        console.error(e);
         document.getElementById('targetsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
       }
     };
 
-    // Load comments
     const loadComments = async () => {
-      console.log('💬 [DEBUG] 开始加载评论...');
       try {
-        console.log('💬 [DEBUG] 请求URL: /admin/comments');
-        console.log('💬 [DEBUG] Headers:', headers);
         const res = await fetch('/admin/comments', { headers });
-        console.log('💬 [DEBUG] 响应状态:', res.status);
         const result = await res.json();
-        console.log('💬 [DEBUG] API返回数据:', result);
         const body = document.getElementById('commentsTableBody');
         if (result.code === 200 && result.data && result.data.length) {
           document.getElementById('statComments').textContent = result.data.length;
           body.innerHTML = result.data.map(c => `
             <tr>
-              <td style="color:var(--apple-secondary)">${c.id}</td>
+              <td style="color:var(--text-secondary)">${c.id}</td>
               <td><strong>${c.username}</strong></td>
               <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.content || '-'}</td>
-              <td>${c.score != null ? `⭐ ${c.score}` : '<span style="color:var(--apple-secondary)">未评分</span>'}</td>
-              <td><a href="/review-target-detail?id=${c.reviewTargetId}&from=admin" style="color:var(--apple-blue);text-decoration:none;font-size:0.85rem">${c.targetName}</a></td>
-              <td><a href="/post-detail?id=${c.postId}&from=admin" style="color:var(--apple-secondary);text-decoration:none;font-size:0.85rem">${c.postTitle}</a></td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${c.createdAt ? c.createdAt.split('T')[0] : '-'}</td>
+              <td>${c.score != null ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1" style="vertical-align:middle;margin-right:2px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${c.score}` : '<span style="color:var(--text-secondary)">未评分</span>'}</td>
+              <td><a href="/review-target-detail?id=${c.reviewTargetId}&from=admin" style="color:var(--sapphire);text-decoration:none;font-size:0.85rem">${c.targetName}</a></td>
+              <td><a href="/post-detail?id=${c.postId}&from=admin" style="color:var(--text-secondary);text-decoration:none;font-size:0.85rem">${c.postTitle}</a></td>
+              <td style="color:var(--text-secondary);font-size:0.85rem">${c.createdAt ? c.createdAt.split('T')[0] : '-'}</td>
               <td><button class="btn-action btn-delete" onclick="deleteComment(${c.id})">删除</button></td>
             </tr>`).join('');
-          console.log(`✅ 💬 成功加载 ${result.data.length} 条评论`);
         } else {
           body.innerHTML = '<tr><td colspan="8" class="empty-state">暂无评论数据</td></tr>';
           document.getElementById('statComments').textContent = '0';
-          console.log('⚠️ 💬 评论数据为空或格式异常:', result);
         }
       } catch(e) {
-        console.error('❌ 💬 加载评论失败:', e);
+        console.error(e);
         document.getElementById('commentsTableBody').innerHTML = '<tr><td colspan="8" class="empty-state">加载失败</td></tr>';
       }
     };
 
     window.deleteTarget = async (targetId, targetName) => {
-      if (!confirm(`⚠️ 确定要删除评论对象「${targetName}」吗？\n\n这将同时删除该对象下的所有评论！`)) return;
+      if (!confirm(`确定要删除评论对象「${targetName}」吗？这将同时删除该对象下的所有评论！`)) return;
       try {
         const res = await fetch(`/admin/review-target/${targetId}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadTargets(); alert('✅ ' + result.message); }
+        if (result.code === 200) { loadTargets(); alert(result.message); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
@@ -591,12 +587,11 @@
       try {
         const res = await fetch(`/admin/comment/${commentId}`, { method: 'DELETE', headers });
         const result = await res.json();
-        if (result.code === 200) { loadComments(); alert('✅ 评论已删除'); }
+        if (result.code === 200) { loadComments(); alert('评论已删除'); }
         else { alert(result.message || '操作失败'); }
       } catch(e) { alert('网络错误'); }
     };
 
-    // Load banned words
     const loadBannedWords = async () => {
       try {
         const res = await fetch('/admin/banned-words', { headers });
@@ -605,9 +600,9 @@
         if (result.code === 200 && result.data && result.data.length) {
           body.innerHTML = result.data.map(w => `
             <tr>
-              <td style="color:var(--apple-secondary)">${w.id}</td>
-              <td><strong style="color:var(--apple-red)">${w.word}</strong></td>
-              <td style="color:var(--apple-secondary);font-size:0.85rem">${w.createdAt ? w.createdAt.split(' ')[0] : '-'}</td>
+              <td style="color:var(--text-secondary)">${w.id}</td>
+              <td><strong style="color:var(--red)">${w.word}</strong></td>
+              <td style="color:var(--text-secondary);font-size:0.85rem">${w.createdAt ? w.createdAt.split(' ')[0] : '-'}</td>
               <td><button class="btn-action btn-delete" onclick="deleteBannedWord(${w.id}, '${w.word}')">删除</button></td>
             </tr>`).join('');
         } else {
@@ -653,15 +648,110 @@
       if (e.key === 'Enter') window.addBannedWord();
     });
 
-    renderNavButtons();
+    initSidebar();
     fetchRole().then(() => {
       loadUsers();
       loadPosts();
       loadTargets();
       loadComments();
     });
+
+    const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+
+    window.switchModal = (type) => {
+      if (type === 'register') {
+        loginModal.hide();
+        registerModal.show();
+      } else {
+        registerModal.hide();
+        loginModal.show();
+      }
+    };
+
+    window.showLoginPrompt = () => { loginModal.show(); };
+    window.showRegisterPrompt = () => { registerModal.show(); };
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('loginModalMsg');
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!username || !password) {
+        msg.className = 'alert alert-danger mb-3';
+        msg.textContent = '请填写用户名和密码';
+        msg.classList.remove('d-none');
+        return;
+      }
+      try {
+        const res = await fetch('/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+          localStorage.setItem('username', result.data.username);
+          localStorage.setItem('role', result.data.role || 'user');
+          loginModal.hide();
+          location.reload();
+        } else {
+          msg.className = 'alert alert-danger mb-3';
+          msg.textContent = result.message || '登录失败';
+          msg.classList.remove('d-none');
+        }
+      } catch (err) {
+        msg.className = 'alert alert-danger mb-3';
+        msg.textContent = '网络错误，请稍后重试';
+        msg.classList.remove('d-none');
+      }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('registerModalMsg');
+      const username = document.getElementById('registerUsername').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!username || !password) {
+        msg.className = 'alert alert-danger mb-3';
+        msg.textContent = '请填写用户名和密码';
+        msg.classList.remove('d-none');
+        return;
+      }
+      if (password.length < 6) {
+        msg.className = 'alert alert-danger mb-3';
+        msg.textContent = '密码至少需要6位';
+        msg.classList.remove('d-none');
+        return;
+      }
+      try {
+        const res = await fetch('/user/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+          localStorage.setItem('username', result.data.username);
+          localStorage.setItem('role', result.data.role || 'user');
+          registerModal.hide();
+          location.reload();
+        } else {
+          msg.className = 'alert alert-danger mb-3';
+          msg.textContent = result.message || '注册失败';
+          msg.classList.remove('d-none');
+        }
+      } catch (err) {
+        msg.className = 'alert alert-danger mb-3';
+        msg.textContent = '网络错误，请稍后重试';
+        msg.classList.remove('d-none');
+      }
+    });
   })();
 </script>
 </body>
 </html>
-//

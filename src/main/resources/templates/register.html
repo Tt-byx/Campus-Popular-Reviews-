@@ -125,8 +125,12 @@
           const result = await res.json().catch(() => null);
 
           if (result && result.code === 200) {
-            setMsg('注册成功，正在跳转到登录页...', true);
-            setTimeout(() => location.href = '/login', 700);
+            setMsg('注册成功，正在进入校圈...', true);
+            localStorage.setItem('token', result.data.token);
+            localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+            localStorage.setItem('username', result.data.username);
+            localStorage.setItem('role', result.data.role || 'user');
+            setTimeout(() => location.href = '/browse-post', 700);
           } else {
             setMsg((result && result.message) ? result.message : '注册失败，请稍后重试', false);
           }

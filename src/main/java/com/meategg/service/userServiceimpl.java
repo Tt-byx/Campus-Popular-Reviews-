@@ -37,9 +37,6 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
         if (!BCrypt.checkpw(password, user.getPassword())) {
             return Result.fail(401, "用户名或密码错误");
         }
-        if ("muted".equals(user.getStatus())) {
-            return Result.fail(403, "该账号已被禁言，无法登录");
-        }
 
         String role = user.getRole() != null ? user.getRole() : "user";
         String jwt = jwtUtils.createJwt(username, role);
@@ -67,9 +64,21 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
         user.setRole("user");
         user.setStatus("active");
         user.setCreated_at(LocalDateTime.now());
+        user.setAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=" + username);
 
         save(user);
-        return Result.ok("注册成功");
+
+        String role = "user";
+        String jwt = jwtUtils.createJwt(username, role);
+        LoginResponse response = new LoginResponse(
+                jwt,
+                "Bearer",
+                jwtUtils.getExpireInSeconds(),
+                username,
+                role
+        );
+
+        return Result.ok(200, "注册成功", response);
     }
 
     @Override
@@ -138,13 +147,14 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
     public Result listAllUsers() {
         List<User> users = list();
         List<Map<String, Object>> data = new java.util.ArrayList<>();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         for (User u : users) {
             Map<String, Object> item = new java.util.HashMap<>();
             item.put("id", u.getId());
             item.put("username", u.getUsername());
             item.put("role", u.getRole());
             item.put("status", u.getStatus());
-            item.put("createdAt", u.getCreated_at());
+            item.put("createdAt", u.getCreated_at() != null ? u.getCreated_at().format(fmt) : null);
             item.put("avatar", u.getAvatar());
             data.add(item);
         }

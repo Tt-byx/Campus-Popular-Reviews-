@@ -1,278 +1,358 @@
 <!doctype html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>帖子分类 - 校圈</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-        :root {
-            --apple-bg: #f5f5f7;
-            --apple-card: #ffffff;
-            --apple-text: #1d1d1f;
-            --apple-secondary: #86868b;
-            --apple-blue: #0066cc;
-            --apple-radius: 18px;
-            --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
-        }
-        body {
-            background: var(--apple-bg);
-            color: var(--apple-text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        .wrap { max-width: 920px; margin: 40px auto; padding: 0 20px; }
-
-        .category-tabs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-bottom: 40px;
-        }
-
-        .category-tab {
-            position: relative;
-            padding: 24px 20px;
-            border: 2px solid transparent;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: center;
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--apple-text);
-            overflow: hidden;
-        }
-
-        .category-tab::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(0,102,204,0.1) 0%, rgba(0,102,204,0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .category-tab:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,102,204,0.15);
-            border-color: rgba(0,102,204,0.3);
-        }
-
-        .category-tab:hover::before {
-            opacity: 1;
-        }
-
-        .category-tab.active {
-            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
-            color: white;
-            border-color: #0066cc;
-            box-shadow: 0 8px 30px rgba(0,102,204,0.3);
-            transform: translateY(-2px);
-        }
-
-        .category-tab.active::before {
-            display: none;
-        }
-
-        .category-tab .icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-
-        .category-tab:hover .icon {
-            transform: scale(1.1);
-        }
-
-        .category-tab .label {
-            position: relative;
-            z-index: 1;
-        }
-
-        .post-card {
-            border: none;
-            border-radius: var(--apple-radius);
-            background: var(--apple-card);
-            box-shadow: var(--apple-shadow);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-            margin-bottom: 20px;
-        }
-        .post-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-        }
-        .post-title { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; }
-        .meta { color: var(--apple-secondary); font-size: 0.85rem; }
-        .content { color: #333; line-height: 1.5; margin-top: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-
-        .post-image-wrapper {
-            margin-top: 16px;
-            border-radius: 14px;
-            overflow: hidden;
-            background: #f0f0f2;
-        }
-        .post-image-wrapper img {
-            width: 100%;
-            height: auto;
-            max-height: 320px;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .post-card:hover .post-image-wrapper img {
-            transform: scale(1.02);
-        }
-
-        .badge-apple {
-            background: linear-gradient(135deg, #f0f0f2 0%, #e8e8ed 100%);
-            color: #666;
-            font-weight: 500;
-            border-radius: 8px;
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            border: none;
-        }
-
-        .back-btn {
-            border-radius: 20px;
-            padding: 10px 24px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: 2px solid #e0e0e0;
-        }
-
-        .back-btn:hover {
-            background: #f5f5f7;
-            border-color: #0066cc;
-            color: #0066cc;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--apple-secondary);
-        }
-        .empty-state svg {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 24px;
-            opacity: 0.2;
-        }
-
-        @media (max-width: 768px) {
-            .category-tabs {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-
-            .category-tab {
-                padding: 20px 16px;
-            }
-
-            .category-tab .icon {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>帖子分类 - 校圈</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link th:href="@{/css/app.css}" rel="stylesheet" />
+  <style>
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    .category-tabs-new { display: flex; flex-direction: column; gap: 4px; }
+    .category-tab-new { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-md); color: var(--slate-light); font-weight: 500; font-size: 0.92rem; transition: all 0.15s ease; cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; }
+    .category-tab-new:hover { background: var(--gray-100); color: var(--sapphire); }
+    .category-tab-new.active { background: rgba(37, 99, 235, 0.08); color: var(--sapphire); font-weight: 600; }
+    .category-tab-new svg { width: 20px; height: 20px; flex-shrink: 0; opacity: 0.7; }
+    .category-tab-new:hover svg, .category-tab-new.active svg { opacity: 1; }
+  </style>
 </head>
 <body>
-<div class="wrap">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 m-0 fw-bold">帖子分类</h1>
-            <p class="text-secondary small m-0">浏览不同类别的校园动态</p>
+<div class="bento-container">
+  <aside class="bento-sidebar" id="mainSidebar">
+    <div class="bento-card sidebar-profile-card">
+      <div class="sidebar-avatar" id="sidebarAvatar">U</div>
+      <div class="sidebar-username" id="sidebarUsername">用户</div>
+      <div class="sidebar-bio" id="sidebarBio">分享校园生活</div>
+    </div>
+    <div class="bento-card sidebar-nav">
+      <button class="sidebar-nav-item" onclick="location.href='/browse-post'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        首页
+      </button>
+      <button class="sidebar-nav-item active" onclick="location.href='/categories'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        分类
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/ranking'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        排行
+      </button>
+      <button class="sidebar-nav-item" id="adminNavBtn" onclick="location.href='/admin'" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        管理
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/profile'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        个人中心
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/settings'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        设置
+      </button>
+      <button class="sidebar-nav-item" id="sidebarLogoutBtn" style="display:none;color:var(--red)" onclick="handleLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        退出登录
+      </button>
+    </div>
+    <div class="bento-card bento-card-sm" id="sidebarLoginArea" style="display:none">
+      <div class="bento-card-body text-center">
+        <p class="text-secondary text-sm m-0">登录以解锁全部功能</p>
+        <div class="flex gap-2 justify-center mt-3">
+          <button class="btn btn-primary btn-sm" onclick="showLoginPrompt()">登录</button>
+          <button class="btn btn-secondary btn-sm" onclick="showRegisterPrompt()">注册</button>
         </div>
-        <button class="btn btn-outline-secondary back-btn" onclick="location.href='/browse-post'">
-            ← 返回广场
-        </button>
+      </div>
     </div>
+  </aside>
 
-    <div class="category-tabs">
-        <button class="category-tab active" data-tag="食堂" onclick="selectCategory(this)">
-            <span class="icon">🍜</span>
-            <span class="label">食堂</span>
-        </button>
-        <button class="category-tab" data-tag="课程" onclick="selectCategory(this)">
-            <span class="icon">📚</span>
-            <span class="label">课程</span>
-        </button>
-        <button class="category-tab" data-tag="社团" onclick="selectCategory(this)">
-            <span class="icon">🎭</span>
-            <span class="label">社团</span>
-        </button>
-        <button class="category-tab" data-tag="活动" onclick="selectCategory(this)">
-            <span class="icon">🎉</span>
-            <span class="label">活动</span>
-        </button>
-        <button class="category-tab" data-tag="其他" onclick="selectCategory(this)">
-            <span class="icon">✨</span>
-            <span class="label">其他</span>
-        </button>
+  <script>
+    (function(){
+      var u = localStorage.getItem('username');
+      if (u) {
+        document.getElementById('sidebarUsername').textContent = u;
+        document.getElementById('sidebarAvatar').textContent = u.charAt(0).toUpperCase();
+        document.getElementById('sidebarBio').textContent = '';
+        document.getElementById('sidebarLoginArea').style.display = 'none';
+        document.getElementById('sidebarLogoutBtn').style.display = 'flex';
+        var r = localStorage.getItem('role') || 'user';
+        if (r === 'admin' || r === 'super_admin') {
+          var ab = document.getElementById('adminNavBtn');
+          if (ab) ab.style.display = 'flex';
+        }
+      } else {
+        document.getElementById('sidebarLoginArea').style.display = 'block';
+        document.getElementById('sidebarLogoutBtn').style.display = 'none';
+      }
+    })();
+  </script>
+
+  <main class="bento-main">
+    <div class="mb-4">
+      <h1 class="fw-bold" style="font-size:1.5rem">帖子分类</h1>
+      <p class="text-secondary small m-0">浏览不同类别的校园动态</p>
     </div>
+    <div class="mb-4">
+      <button class="btn btn-ghost btn-sm" onclick="location.href='/browse-post'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        返回广场
+      </button>
+    </div>
+    <div class="category-tabs-new">
+      <button class="category-tab-new active" data-tag="食堂" onclick="selectCategory(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        <span class="label">食堂</span>
+      </button>
+      <button class="category-tab-new" data-tag="课程" onclick="selectCategory(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <span class="label">课程</span>
+      </button>
+      <button class="category-tab-new" data-tag="社团" onclick="selectCategory(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="label">社团</span>
+      </button>
+      <button class="category-tab-new" data-tag="活动" onclick="selectCategory(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+        <span class="label">活动</span>
+      </button>
+      <button class="category-tab-new" data-tag="其他" onclick="selectCategory(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        <span class="label">其他</span>
+      </button>
+    </div>
+    <div id="list" class="d-grid gap-3"></div>
+  </main>
+</div>
 
-    <div id="list" class="d-grid"></div>
+<!-- Login Modal -->
+<div class="modal fade auth-modal" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="关闭">&times;</button>
+        <h5 class="modal-title">登录</h5>
+        <p class="modal-subtitle">欢迎回到校圈</p>
+      </div>
+      <div class="modal-body">
+        <form id="loginForm">
+          <div class="mb-3"><input type="text" id="loginUsername" class="form-control" placeholder="用户名" required /></div>
+          <div class="mb-4"><input type="password" id="loginPassword" class="form-control" placeholder="密码" required /></div>
+          <button type="submit" class="btn-submit mb-3">登录</button>
+          <div class="text-center" style="font-size:0.88rem"><span class="text-secondary">还没有账号？</span><a href="javascript:void(0)" onclick="switchModal('register')" class="switch-link">立即注册</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade auth-modal" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="关闭">&times;</button>
+        <h5 class="modal-title">注册</h5>
+        <p class="modal-subtitle">加入校圈，分享校园生活</p>
+      </div>
+      <div class="modal-body">
+        <form id="registerForm">
+          <div class="mb-3"><input type="text" id="regUsername" class="form-control" placeholder="用户名" required /></div>
+          <div class="mb-3"><input type="password" id="regPassword" class="form-control" placeholder="密码" required /></div>
+          <div class="mb-4"><input type="password" id="regConfirmPassword" class="form-control" placeholder="确认密码" required /></div>
+          <button type="submit" class="btn-submit mb-3">注册</button>
+          <div class="text-center" style="font-size:0.88rem"><span class="text-secondary">已有账号？</span><a href="javascript:void(0)" onclick="switchModal('login')" class="switch-link">立即登录</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let currentTag = '食堂';
+  (() => {
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+      const orig = item.getAttribute('onclick');
+      if (!orig || !orig.includes('location.href')) return;
+      item.removeAttribute('onclick');
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const match = orig.match(/location\.href=['"]([^'"]+)['"]/);
+        if (!match) return;
+        document.body.classList.add('page-transitioning');
+        setTimeout(() => { location.href = match[1]; }, 120);
+      });
+    });
 
-    const selectCategory = (element) => {
-        document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
-        element.classList.add('active');
-        currentTag = element.dataset.tag;
-        loadPosts(currentTag);
-    };
+    const token = localStorage.getItem('token');
+  const tokenType = localStorage.getItem('tokenType') || 'Bearer';
+  const username = localStorage.getItem('username');
+  const role = localStorage.getItem('role') || 'user';
 
-    const renderList = (items) => {
-        const list = document.getElementById('list');
-        if (!items || !items.length) {
-            list.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+  let loginModal, registerModal;
+  document.addEventListener('DOMContentLoaded', () => {
+    loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+    registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+    initSidebar();
+    initNav();
+    loadPosts(currentTag);
+  });
+
+  window.showLoginPrompt = () => loginModal.show();
+  window.showRegisterPrompt = () => registerModal.show();
+
+  window.switchModal = (type) => {
+    if (type === 'login') { registerModal.hide(); loginModal.show(); }
+    else { loginModal.hide(); registerModal.show(); }
+  };
+
+  const initSidebar = async () => {
+    if (!token) { document.getElementById('sidebarLoginArea').style.display = ''; return; }
+    document.getElementById('sidebarLoginArea').style.display = 'none';
+    document.getElementById('sidebarLogoutBtn').style.display = 'flex';
+    if (role === 'admin' || role === 'super_admin') document.getElementById('adminNavBtn').style.display = 'flex';
+    try {
+      const res = await fetch('/user/profile', { headers: { 'Authorization': `${tokenType} ${token}` } });
+      const result = await res.json();
+      if (result.code === 200) {
+        const data = result.data;
+        document.getElementById('sidebarUsername').textContent = data.username || username;
+        document.getElementById('sidebarBio').textContent = data.signature || '';
+        const avatarEl = document.getElementById('sidebarAvatar');
+        if (data.avatar) avatarEl.innerHTML = `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        else avatarEl.textContent = (data.username || username).charAt(0).toUpperCase();
+      }
+    } catch (e) {}
+  };
+
+  const initNav = () => {
+    if (role === 'admin' || role === 'super_admin') {
+      const el = document.getElementById('adminNavBtn');
+      if (el) el.style.display = '';
+    }
+  };
+
+  window.handleLogout = () => {
+    if (confirm('确定要退出登录吗？')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenType');
+      localStorage.removeItem('username');
+      localStorage.removeItem('role');
+      location.href = '/browse-post';
+    }
+  };
+
+  // Category & Post logic
+  let currentTag = '食堂';
+
+  window.selectCategory = (element) => {
+    document.querySelectorAll('.category-tab-new').forEach(tab => tab.classList.remove('active'));
+    element.classList.add('active');
+    currentTag = element.dataset.tag;
+    loadPosts(currentTag);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const diff = now - d;
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+      return `${d.getMonth()+1}月${d.getDate()}日`;
+    } catch (e) { return dateStr; }
+  };
+
+  const renderList = (items) => {
+    const list = document.getElementById('list');
+    if (!items || !items.length) {
+      list.innerHTML = `
+        <div class="bento-card p-5 text-center">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary);opacity:0.3;margin-bottom:16px">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
-          <div class="h5">暂无${currentTag}分类的帖子</div>
-          <p class="small mt-2">去看看其他分类吧～</p>
+          <div class="h5 fw-bold">暂无「${currentTag}」分类的帖子</div>
+          <p class="text-secondary small mt-2">去看看其他分类吧</p>
         </div>
       `;
-            return;
-        }
-        list.innerHTML = items.map(item => `
-      <div class="card post-card" onclick="location.href='/post-detail?id=${item.id}&from=categories'">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="post-title">${item.title}</div>
-            ${item.tag ? `<span class="badge badge-apple">#${item.tag}</span>` : ''}
+      return;
+    }
+    list.innerHTML = items.map(item => {
+      const tagColor = item.tag === '食堂' ? 'tag-badge-orange' : item.tag === '课程' ? 'tag-badge-green' : item.tag === '社团' ? 'tag-badge' : item.tag === '活动' ? 'tag-badge-green' : 'tag-badge';
+      return `
+        <div class="post-card" onclick="location.href='/post-detail?id=${item.id}&from=categories'">
+          <div class="post-card-inner">
+            <div class="post-card-header">
+              <div class="post-card-title">${item.title}</div>
+              ${item.tag ? `<span class="tag-badge ${tagColor}">#${item.tag}</span>` : ''}
+            </div>
+            <div class="post-card-meta">
+              <span class="post-card-author">
+                <span class="post-card-author-avatar">${item.avatar ? `<img src="${item.avatar}" alt="${item.username}">` : (item.username || '?').charAt(0).toUpperCase()}</span>
+                ${item.username || '未知'}
+              </span>
+              <span>${formatDate(item.createdAt)}</span>
+            </div>
+            ${item.content ? `<div class="post-card-content">${item.content}</div>` : ''}
+            ${item.imageUrl ? `
+              <div class="post-card-image">
+                <img src="${item.imageUrl}" alt="${item.title}" loading="lazy" />
+              </div>
+            ` : ''}
           </div>
-          <div class="meta mt-1">作者：${item.username || '未知'} · ${item.createdAt || ''}</div>
-          ${item.imageUrl ? `<div class="post-image-wrapper"><img src="${item.imageUrl}" alt="${item.title}" loading="lazy"></div>` : ''}
-          <div class="content">${item.content}</div>
         </div>
-      </div>
-    `).join('');
-    };
+      `;
+    }).join('');
+  };
 
-    const loadPosts = async (tag) => {
-        try {
-            const res = await fetch(`/post/list/by-tag?tag=${encodeURIComponent(tag)}`);
-            const result = await res.json();
-            if (result.code === 200) {
-                renderList(result.data);
-            }
-        } catch (e) {
-            console.error('加载帖子失败:', e);
-        }
-    };
+  const loadPosts = async (tag) => {
+    try {
+      const res = await fetch(`/post/list/by-tag?tag=${encodeURIComponent(tag)}`);
+      const result = await res.json();
+      if (result.code === 200) renderList(result.data);
+    } catch (e) { console.error('加载帖子失败:', e); }
+  };
 
-    // 初始加载
-    loadPosts(currentTag);
+  // Auth forms
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const usernameVal = document.getElementById('loginUsername').value.trim();
+    const passwordVal = document.getElementById('loginPassword').value.trim();
+    if (!usernameVal || !passwordVal) { alert('请填写用户名和密码'); return; }
+    try {
+      const res = await fetch('/user/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameVal, password: passwordVal }) });
+      const result = await res.json();
+      if (result.code === 200) {
+        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+        localStorage.setItem('username', result.data.username || usernameVal);
+        localStorage.setItem('role', result.data.role || 'user');
+        loginModal.hide();
+        location.reload();
+      } else { alert(result.message || '登录失败'); }
+    } catch (err) { alert('网络错误'); }
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const usernameVal = document.getElementById('regUsername').value.trim();
+    const passwordVal = document.getElementById('regPassword').value.trim();
+    const confirmVal = document.getElementById('regConfirmPassword').value.trim();
+    if (!usernameVal || !passwordVal || !confirmVal) { alert('请填写所有字段'); return; }
+    if (passwordVal !== confirmVal) { alert('两次密码输入不一致'); return; }
+    try {
+      const res = await fetch('/user/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameVal, password: passwordVal }) });
+      const result = await res.json();
+      if (result.code === 200) {
+        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('tokenType', result.data.tokenType || 'Bearer');
+        localStorage.setItem('username', result.data.username);
+        localStorage.setItem('role', result.data.role || 'user');
+        location.reload();
+      } else { alert(result.message || '注册失败'); }
+    } catch (err) { alert('网络错误'); }
+  });
+  })();
 </script>
 </body>
 </html>

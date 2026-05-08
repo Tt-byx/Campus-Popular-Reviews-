@@ -87,6 +87,9 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
         }
+        if ("muted".equals(user.getStatus())) {
+            return Result.fail(403, "您已被禁言，无法发布帖子");
+        }
 
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
@@ -131,11 +134,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             }
         }
         Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> avatarMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectBatchIds(userIds);
             for (User u : users) {
                 if (u != null && u.getId() != null) {
                     usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                    avatarMap.put(Long.valueOf(u.getId()), u.getAvatar());
                 }
             }
         }
@@ -164,6 +169,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("avatar", avatarMap.getOrDefault(p.getUserId(), null));
             item.put("createdAt", p.getCreatedAt());
             item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
             item.put("commentCount", totalComments);
@@ -212,6 +218,9 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
                 .last("limit 1"));
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
+        }
+        if ("muted".equals(user.getStatus())) {
+            return Result.fail(403, "您已被禁言，无法创建评论对象");
         }
 
         ReviewTarget reviewTarget = new ReviewTarget();
@@ -406,6 +415,9 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         if (user == null) {
             return Result.fail(401, "当前登录用户不存在");
         }
+        if ("muted".equals(user.getStatus())) {
+            return Result.fail(403, "您已被禁言，无法发表评论");
+        }
 
         Integer existingCount = commentUserMapper.selectCount(
                 com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
@@ -514,6 +526,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("tag", p.getTag());
             item.put("imageUrl", p.getImageUrl());
             item.put("username", username.trim());
+            item.put("avatar", user.getAvatar());
             item.put("createdAt", p.getCreatedAt());
             data.add(item);
         }
@@ -850,6 +863,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             
             User user = userMapper.selectById(p.getUserId());
             item.put("username", user != null ? user.getUsername() : "未知");
+            item.put("avatar", user != null ? user.getAvatar() : null);
             data.add(item);
         }
         return Result.ok(data);
@@ -976,11 +990,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             }
         }
         Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> avatarMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectBatchIds(userIds);
             for (User u : users) {
                 if (u != null && u.getId() != null) {
                     usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                    avatarMap.put(Long.valueOf(u.getId()), u.getAvatar());
                 }
             }
         }
@@ -1009,6 +1025,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("avatar", avatarMap.getOrDefault(p.getUserId(), null));
             item.put("createdAt", p.getCreatedAt());
             item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
             item.put("commentCount", totalComments);
@@ -1056,11 +1073,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         }
 
         Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> avatarMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectBatchIds(userIds);
             for (User u : users) {
                 if (u != null && u.getId() != null) {
                     usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                    avatarMap.put(Long.valueOf(u.getId()), u.getAvatar());
                 }
             }
         }
@@ -1075,6 +1094,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("avatar", avatarMap.getOrDefault(p.getUserId(), null));
             item.put("createdAt", p.getCreatedAt());
             data.add(item);
         }
@@ -1098,11 +1118,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             }
         }
         Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> avatarMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectBatchIds(userIds);
             for (User u : users) {
                 if (u != null && u.getId() != null) {
                     usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                    avatarMap.put(Long.valueOf(u.getId()), u.getAvatar());
                 }
             }
         }
@@ -1142,6 +1164,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("avatar", avatarMap.getOrDefault(p.getUserId(), null));
             item.put("createdAt", p.getCreatedAt());
             item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
             item.put("commentCount", totalComments);

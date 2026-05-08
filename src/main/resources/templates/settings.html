@@ -5,361 +5,216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>设置 - 校圈</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link th:href="@{/css/app.css}" rel="stylesheet" />
   <style>
-    :root {
-        --apple-bg: #f5f5f7;
-        --apple-card: #ffffff;
-        --apple-text: #1d1d1f;
-        --apple-secondary: #86868b;
-        --apple-blue: #0066cc;
-        --apple-red: #ff3b30;
-        --apple-radius: 20px;
-        --apple-shadow: 0 8px 30px rgba(0,0,0,0.04);
-    }
-    body { background: var(--apple-bg); color: var(--apple-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    .wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
-
-    .settings-card {
-        border: none;
-        border-radius: 24px;
-        background: var(--apple-card);
-        box-shadow: var(--apple-shadow);
-        padding: 30px;
-        margin-bottom: 20px;
-    }
-
-    .settings-title {
-        font-weight: 700;
-        font-size: 1.5rem;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #e5e5e5;
-    }
-
-    .settings-section {
-        margin-bottom: 30px;
-    }
-
-    .settings-section-title {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--apple-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 12px;
-    }
-
-    .settings-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 0;
-        border-bottom: 1px solid #f0f0f2;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .settings-item:last-child {
-        border-bottom: none;
-    }
-
-    .settings-item:hover {
-        background: #f9f9f9;
-        margin: 0 -15px;
-        padding-left: 15px;
-        padding-right: 15px;
-        border-radius: 12px;
-    }
-
-    .settings-item-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .settings-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-    }
-
-    .settings-item-text {
-        font-weight: 500;
-    }
-
-    .settings-item-desc {
-        font-size: 0.85rem;
-        color: var(--apple-secondary);
-        margin-top: 2px;
-    }
-
-    .settings-arrow {
-        color: var(--apple-secondary);
-        font-size: 1.2rem;
-    }
-
-    .btn-logout {
-        background: var(--apple-red);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 14px;
-        font-weight: 600;
-        width: 100%;
-        transition: opacity 0.2s;
-    }
-
-    .btn-logout:hover {
-        opacity: 0.9;
-        color: white;
-    }
-
-    .back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--apple-secondary);
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 500;
-        padding: 6px 14px;
-        border-radius: 20px;
-        transition: all 0.2s ease;
-    }
-
-    .back-btn:hover {
-        color: var(--apple-blue);
-        background: rgba(0, 102, 204, 0.06);
-        text-decoration: none;
-    }
-
-    .toggle-switch {
-        position: relative;
-        width: 50px;
-        height: 28px;
-        background: #e0e0e0;
-        border-radius: 14px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-
-    .toggle-switch.active {
-        background: var(--apple-blue);
-    }
-
-    .toggle-switch::after {
-        content: '';
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 22px;
-        height: 22px;
-        background: white;
-        border-radius: 50%;
-        transition: transform 0.3s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .toggle-switch.active::after {
-        transform: translateX(22px);
-    }
-
-    .danger-zone {
-        border: 2px solid var(--apple-red);
-        border-radius: 20px;
-        padding: 24px;
-        margin-top: 30px;
-    }
-
-    .danger-title {
-        color: var(--apple-red);
-        font-weight: 700;
-        font-size: 1.2rem;
-        margin-bottom: 12px;
-    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    .settings-section { margin-bottom: 28px; }
+    .settings-section-title { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; padding-left: 4px; }
+    .settings-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item:hover .settings-item-label { color: var(--sapphire); }
+    .settings-item-icon { width: 20px; height: 20px; color: var(--text-secondary); flex-shrink: 0; }
+    .settings-item-label { flex: 1; font-weight: 500; color: var(--slate); transition: color 0.2s; }
+    .settings-item-arrow { width: 16px; height: 16px; color: var(--gray-300); }
+    .btn-logout-page { width: 100%; padding: 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card); color: var(--red); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+    .btn-logout-page:hover { background: #FEF2F2; border-color: var(--red); }
+    .btn-danger-page { width: 100%; padding: 12px; border-radius: var(--radius-lg); border: 1px solid var(--red); background: var(--card); color: var(--red); font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+    .btn-danger-page:hover { background: #FEF2F2; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; text-decoration: none; padding: 6px 14px; border-radius: var(--radius-full); transition: all 0.2s; }
+    .back-link:hover { color: var(--sapphire); background: rgba(37, 99, 235, 0.06); text-decoration: none; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="mb-5">
-    <a href="javascript:void(0)" onclick="goBack()" class="back-btn" id="backButton">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
-      </svg>
-      <span id="backText">返回</span>
-
-      <!-- ... existing code ... -->
-    </a>
-  </div>
-
-  <div class="settings-card">
-    <h1 class="settings-title">⚙️ 设置</h1>
-
-    <div class="settings-section">
-      <div class="settings-section-title">账户管理</div>
-
-      <div class="settings-item" onclick="location.href='/profile'">
-        <div class="settings-item-left">
-          <div class="settings-icon" style="background: #007aff; color: white;">👤</div>
-          <div>
-            <div class="settings-item-text">个人资料</div>
-            <div class="settings-item-desc">编辑昵称、头像和个性签名</div>
-          </div>
-        </div>
-        <span class="settings-arrow">›</span>
-      </div>
+<div class="bento-container">
+  <aside class="bento-sidebar" id="mainSidebar">
+    <div class="bento-card sidebar-profile-card">
+      <div class="sidebar-avatar" id="sidebarAvatar">U</div>
+      <div class="sidebar-username" id="sidebarUsername">用户</div>
+      <div class="sidebar-bio" id="sidebarBio">分享校园生活</div>
     </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">数据管理</div>
-
-      <div class="settings-item" onclick="clearCache()">
-        <div class="settings-item-left">
-          <div class="settings-icon" style="background: #5ac8fa; color: white;">️</div>
-          <div>
-            <div class="settings-item-text">清除本地缓存</div>
-            <div class="settings-item-desc">清除浏览器本地存储的登录信息</div>
-          </div>
-        </div>
-        <span class="settings-arrow">›</span>
-      </div>
-
-      <div class="settings-item" onclick="showAbout()">
-        <div class="settings-item-left">
-          <div class="settings-icon" style="background: #8e8e93; color: white;">ℹ️</div>
-          <div>
-            <div class="settings-item-text">关于校圈</div>
-            <div class="settings-item-desc">版本信息</div>
-          </div>
-        </div>
-        <span class="settings-arrow">›</span>
-      </div>
+    <div class="bento-card sidebar-nav">
+      <button class="sidebar-nav-item" onclick="location.href='/browse-post'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>首页
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/categories'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>分类
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/ranking'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>排行
+      </button>
+      <button class="sidebar-nav-item" id="adminNavBtn" style="display:none" onclick="location.href='/admin'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>管理
+      </button>
+      <button class="sidebar-nav-item" onclick="location.href='/profile'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>个人中心
+      </button>
+      <button class="sidebar-nav-item active" onclick="location.href='/settings'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置
+      </button>
     </div>
-
-    <div class="settings-section mt-4">
-      <button class="btn-logout" onclick="handleLogout()">退出登录</button>
-    </div>
-
-    <div class="danger-zone">
-      <div class="danger-title">⚠️ 危险操作</div>
-      <div class="settings-item" onclick="deleteAccount()" style="border-bottom: none;">
-        <div class="settings-item-left">
-          <div class="settings-icon" style="background: #ff3b30; color: white;">🗑️</div>
-          <div>
-            <div class="settings-item-text" style="color: var(--apple-red);">注销账号</div>
-            <div class="settings-item-desc">永久删除您的账号及所有数据</div>
-          </div>
+    <div class="bento-card bento-card-sm" id="sidebarLoginArea" style="display:none">
+      <div class="bento-card-body text-center">
+        <p class="text-secondary text-sm m-0">登录以解锁全部功能</p>
+        <div class="flex gap-2 justify-center mt-3">
+          <button class="btn btn-primary btn-sm" onclick="showLoginPrompt()">登录</button>
+          <button class="btn btn-secondary btn-sm" onclick="showRegisterPrompt()">注册</button>
         </div>
       </div>
     </div>
-  </div>
+  </aside>
+
+  <script>
+    (function(){
+      var u = localStorage.getItem('username');
+      if (u) {
+        document.getElementById('sidebarUsername').textContent = u;
+        document.getElementById('sidebarAvatar').textContent = u.charAt(0).toUpperCase();
+        document.getElementById('sidebarBio').textContent = '';
+        document.getElementById('sidebarLoginArea').style.display = 'none';
+        document.getElementById('sidebarLogoutBtn').style.display = 'flex';
+        var r = localStorage.getItem('role') || 'user';
+        if (r === 'admin' || r === 'super_admin') {
+          var ab = document.getElementById('adminNavBtn');
+          if (ab) ab.style.display = 'flex';
+        }
+      } else {
+        document.getElementById('sidebarLoginArea').style.display = 'block';
+        document.getElementById('sidebarLogoutBtn').style.display = 'none';
+      }
+    })();
+  </script>
+
+  <main class="bento-main">
+    <div class="mb-4">
+      <a href="/browse-post" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> 返回广场
+      </a>
+    </div>
+
+    <div class="bento-card" style="padding:32px">
+      <div class="settings-section">
+        <div class="settings-section-title">账户管理</div>
+        <div class="settings-item" onclick="showAbout()">
+          <svg class="settings-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span class="settings-item-label">关于校圈</span>
+          <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="settings-item" onclick="clearCache()">
+          <svg class="settings-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <span class="settings-item-label">清理缓存</span>
+          <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+      <hr class="my-4" style="border-color:var(--border);margin:24px 0">
+
+      <button class="btn-logout-page mb-3" onclick="handleLogout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;vertical-align:middle"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>退出登录
+      </button>
+      <div style="margin-top:20px">
+        <div class="settings-section-title" style="color:var(--red);margin-bottom:10px">危险区域</div>
+        <button class="btn-danger-page" onclick="deactivateAccount()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;vertical-align:middle"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>注销账号
+        </button>
+      </div>
+    </div>
+  </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>  (() => {
-  const token = localStorage.getItem('token');
-  const tokenType = localStorage.getItem('tokenType') || 'Bearer';
-  const username = localStorage.getItem('username');
-
-  if (!token) {
-    localStorage.setItem('showLoginMsg', '请先登录后再访问设置');
-    location.href = '/browse-post';
-    return;
-  }
-
-  window.handleLogout = () => {
-    if (confirm('确定要退出登录吗？')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('tokenType');
-      localStorage.removeItem('username');
-      localStorage.removeItem('role');
-      location.href = '/browse-post';
-    }
-  };
-
-  window.showAbout = () => {
-    alert('校圈 v1.0.0\n\n校园点评社区\n\n功能：\n• 发布校园帖子\n• 评论和评分\n• 个性化推荐\n\n© 2024 Campus Reviews');
-  };
-
-  window.clearCache = () => {
-    if (confirm('确定要清除本地缓存吗？\n\n这将清除：\n• 登录状态\n• 浏览记录\n\n清除后需要重新登录。')) {
-      localStorage.clear();
-      alert('缓存已清除，即将跳转到帖子广场');
-      location.href = '/browse-post';
-    }
-  };
-
-  window.deleteAccount = async () => {
-    if (!confirm('⚠️ 警告：此操作不可恢复！\n\n确定要注销您的账号吗？\n\n这将永久删除：\n• 您的用户账户\n• 您发布的所有帖子\n• 您发表的所有评论\n• 您的所有个人数据')) {
-      return;
-    }
-
-    const doubleConfirm = prompt('请输入您的用户名 "' + username + '" 以确认注销：');
-    if (doubleConfirm !== username) {
-      alert('用户名输入错误，操作已取消');
-      return;
-    }
-
-    try {
-      const res = await fetch('/user/account', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `${tokenType} ${token}`
-        }
+<script>
+  (() => {
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+      const orig = item.getAttribute('onclick');
+      if (!orig || !orig.includes('location.href')) return;
+      item.removeAttribute('onclick');
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const match = orig.match(/location\.href=['"]([^'"]+)['"]/);
+        if (!match) return;
+        document.body.classList.add('page-transitioning');
+        setTimeout(() => { location.href = match[1]; }, 120);
       });
+    });
 
-      const result = await res.json();
+    const token = localStorage.getItem('token');
+    const tokenType = localStorage.getItem('tokenType') || 'Bearer';
+    const username = localStorage.getItem('username');
 
-      if (result.code === 200) {
-        // 清除所有本地存储
-        localStorage.clear();
-        alert('✅ ' + result.message + '\n\n感谢您的使用，再见！');
+    if (!token) {
+      localStorage.setItem('showLoginMsg', '请先登录后再访问设置');
+      location.href = '/browse-post';
+      return;
+    }
+
+    const initSidebar = async () => {
+      const sidebarLoginArea = document.getElementById('sidebarLoginArea');
+      const adminNavBtn = document.getElementById('adminNavBtn');
+      const sidebarAvatar = document.getElementById('sidebarAvatar');
+      const sidebarUsername = document.getElementById('sidebarUsername');
+      const sidebarBio = document.getElementById('sidebarBio');
+
+      sidebarLoginArea.style.display = 'none';
+
+      const role = localStorage.getItem('role') || 'user';
+      if (role === 'admin' || role === 'super_admin') {
+        adminNavBtn.style.display = 'flex';
+      }
+
+      sidebarUsername.textContent = username;
+      try {
+        const res = await fetch('/user/profile', {
+          headers: { 'Authorization': `${tokenType} ${token}` }
+        });
+        const result = await res.json();
+        if (result.code === 200 && result.data) {
+          const data = result.data;
+          if (data.avatar) {
+            sidebarAvatar.innerHTML = `<img src="${data.avatar}" alt="">`;
+          } else {
+            sidebarAvatar.textContent = (data.username || username).charAt(0).toUpperCase();
+          }
+          sidebarUsername.textContent = data.username || username;
+          sidebarBio.textContent = data.signature || '';
+        }
+      } catch(e) {
+        sidebarAvatar.textContent = username.charAt(0).toUpperCase();
+      }
+    };
+
+    window.handleLogout = () => {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenType');
+        localStorage.removeItem('username');
+        localStorage.removeItem('role');
         location.href = '/browse-post';
-      } else {
-        alert('❌ 操作失败：' + result.message);
       }
-    } catch (e) {
-      console.error(e);
-      alert('网络错误，请稍后重试');
-    }
-  };
+    };
 
-  window.goBack = () => {
-    const referrer = document.referrer;
-    if (referrer && referrer.includes(window.location.host)) {
-      if (referrer.includes('/profile')) {
-        location.href = '/profile';
-      } else {
-        history.back();
-      }
-    } else {
-      location.href = '/profile';
-    }
-  };
+    window.showAbout = () => { alert('校圈 - 校园生活分享平台\n版本 1.0.0'); };
+    window.clearCache = () => { alert('缓存已清理'); };
 
-  const setBackButton = () => {
-    const referrer = document.referrer;
-    const backText = document.getElementById('backText');
+    window.deactivateAccount = async () => {
+      if (!confirm('确定要注销账号吗？注销后账号将无法使用，所有数据将被清除。此操作不可恢复！')) return;
+      if (!confirm('再次确认：您确定要注销账号吗？')) return;
+      try {
+        const res = await fetch('/user/account', {
+          method: 'DELETE',
+          headers: { 'Authorization': `${tokenType} ${token}` }
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          alert('账号已注销');
+          localStorage.clear();
+          location.href = '/browse-post';
+        } else {
+          alert(result.message || '注销失败');
+        }
+      } catch (e) { console.error(e); alert('网络错误'); }
+    };
 
-    if (referrer && referrer.includes(window.location.host)) {
-      if (referrer.includes('/profile')) {
-        backText.textContent = '返回个人中心';
-      } else {
-        backText.textContent = '返回';
-      }
-    } else {
-      backText.textContent = '返回个人中心';
-    }
-  };
-
-  setBackButton();
-})();
+    initSidebar();
+  })();
 </script>
 </body>
 </html>
