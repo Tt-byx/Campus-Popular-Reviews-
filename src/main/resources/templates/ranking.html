@@ -156,10 +156,21 @@
       item.removeAttribute('onclick');
       item.addEventListener('click', function(e) {
         e.preventDefault();
-        const match = orig.match(/location\.href=['"]([^'"]+)['"]/);
-        if (!match) return;
+        let url = '';
+        const match = orig.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+        if (match) {
+          url = match[1];
+        } else {
+          const funcMatch = orig.match(/location\.href\s*=\s*(\S+)/);
+          if (funcMatch) {
+            url = funcMatch[1].replace(/[();\s]+$/, '');
+          }
+        }
+        if (!url) return;
         document.body.classList.add('page-transitioning');
-        setTimeout(() => { location.href = match[1]; }, 120);
+        setTimeout(() => { 
+          window.location.href = url;
+        }, 120);
       });
     });
 
@@ -278,6 +289,10 @@
               <span>${formatDate(item.createdAt)}</span>
             </div>
             ${item.content ? `<div class="post-card-content">${item.content}</div>` : ''}
+            <div class="post-card-stats">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${item.viewCount || 0}</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${item.commentCount || 0}</span>
+            </div>
             ${item.imageUrl ? `
               <div class="post-card-image">
                 <img src="${item.imageUrl}" alt="${item.title}" loading="lazy" />

@@ -220,10 +220,21 @@
       item.removeAttribute('onclick');
       item.addEventListener('click', function(e) {
         e.preventDefault();
-        const match = orig.match(/location\.href=['"]([^'"]+)['"]/);
-        if (!match) return;
+        let url = '';
+        const match = orig.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+        if (match) {
+          url = match[1];
+        } else {
+          const funcMatch = orig.match(/location\.href\s*=\s*(\S+)/);
+          if (funcMatch) {
+            url = funcMatch[1].replace(/[();\s]+$/, '');
+          }
+        }
+        if (!url) return;
         document.body.classList.add('page-transitioning');
-        setTimeout(() => { location.href = match[1]; }, 120);
+        setTimeout(() => { 
+          window.location.href = url;
+        }, 120);
       });
     });
 

@@ -693,6 +693,27 @@ body.page-transitioning .bento-main {
   overflow: hidden;
 }
 
+.post-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.post-card-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.post-card-stats svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.6;
+}
+
 /* ══════════ Buttons ══════════ */
 
 .btn {

@@ -519,6 +519,16 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
 
         List<Map<String, Object>> data = new ArrayList<>();
         for (Post p : posts) {
+            int totalComments = 0;
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query().eq("post_id", p.getId()));
+            if (targets != null) {
+                for (ReviewTarget rt : targets) {
+                    int cnt = commentUserMapper.selectCount(
+                            com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query().eq("review_target_id", rt.getId())).intValue();
+                    totalComments += cnt;
+                }
+            }
             Map<String, Object> item = new HashMap<>();
             item.put("id", p.getId());
             item.put("title", p.getTitle());
@@ -528,6 +538,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("username", username.trim());
             item.put("avatar", user.getAvatar());
             item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
             data.add(item);
         }
         return Result.ok(data);
