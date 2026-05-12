@@ -8,6 +8,9 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=spring)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=flat-square&logo=mysql)
 ![MyBatis Plus](https://img.shields.io/badge/MyBatis%20Plus-3.4.3-red?style=flat-square)
+![Vue](https://img.shields.io/badge/Vue-3.4-4FC08D?style=flat-square&logo=vuedotjs)
+![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite)
+![Element Plus](https://img.shields.io/badge/Element%20Plus-2.5-409EFF?style=flat-square&logo=element)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
 **武汉中国地质大学软件工程课程实习作品 · 2026年春季**
