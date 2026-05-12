@@ -49,3 +49,17 @@ logs/
 
 # Local configuration
 application-local.properties
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vue.js / Vite
+dist/
+.vite/
+
+# Claude IDE
+.claude/
+.playwright-mcp/

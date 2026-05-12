@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  sql:
+    init:
+      mode: never
+
+# JWT config
+jwt:
+  secret: testsecretkeyforunittestingonly1234567890test
+  expire: 3600
+
+# Disable OSS for testing
+aliyun:
+  oss:
+    endpoint: http://oss-cn-test.aliyuncs.com
+    accessKeyId: test-key
+    accessKeySecret: test-secret
+    bucketName: test-bucket
