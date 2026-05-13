@@ -308,7 +308,7 @@ class AdminControllerTest {
 
     @Test
     void addBannedWord_shouldSucceed_whenAdmin() throws Exception {
-        when(bannedWordMapper.selectCount(any())).thenReturn(0);
+        when(bannedWordMapper.selectCount(any())).thenReturn(0L);
 
         mockMvc.perform(post("/admin/banned-words")
                         .with(asAdmin())
@@ -330,7 +330,7 @@ class AdminControllerTest {
 
     @Test
     void addBannedWord_shouldFail_whenWordAlreadyExists() throws Exception {
-        when(bannedWordMapper.selectCount(any())).thenReturn(1);
+        when(bannedWordMapper.selectCount(any())).thenReturn(1L);
 
         mockMvc.perform(post("/admin/banned-words")
                         .with(asAdmin())

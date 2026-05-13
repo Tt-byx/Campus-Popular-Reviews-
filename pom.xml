@@ -109,7 +109,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.3</version>
+            <version>3.5.5</version>
         </dependency>
 
         <!-- 阿里云OSS -->
@@ -155,6 +155,9 @@
                                <artifactId>lombok</artifactId>
                            </exclude>
                        </excludes>
+                       <jvmArguments>
+                           --add-opens java.base/java.lang.invoke=ALL-UNNAMED
+                       </jvmArguments>
                    </configuration>
              </plugin>
           </plugins>

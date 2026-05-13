@@ -1,7 +1,9 @@
 <template>
   <router-view v-slot="{ Component, route }">
     <transition name="page" mode="out-in">
-      <component :is="Component" :key="route.path" />
+      <keep-alive :max="10">
+        <component :is="Component" :key="route.path" />
+      </keep-alive>
     </transition>
   </router-view>
   <ChatDialog

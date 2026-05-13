@@ -199,7 +199,7 @@ public class AdminController {
             return Result.fail("违禁词不能为空");
         }
         String word = bannedWord.getWord().trim();
-        Integer count = bannedWordMapper.selectCount(
+        Long count = bannedWordMapper.selectCount(
                 com.baomidou.mybatisplus.core.toolkit.Wrappers.<BannedWord>query().eq("word", word)
         );
         if (count > 0) {

@@ -74,30 +74,29 @@ public class FavoriteService {
 
         List<Map<String, Object>> list = result.getRecords().stream().map(fav -> {
             Post post = postMapper.selectById(fav.getPostId());
+            if (post == null) return null;
             Map<String, Object> item = new java.util.HashMap<>();
             item.put("id", fav.getId());
             item.put("createdAt", fav.getCreatedAt());
-            if (post != null) {
-                Map<String, Object> postMap = new java.util.HashMap<>();
-                postMap.put("id", post.getId());
-                postMap.put("userId", post.getUserId());
-                postMap.put("title", post.getTitle());
-                postMap.put("content", post.getContent());
-                postMap.put("tag", post.getTag());
-                postMap.put("imageUrl", post.getImageUrl());
-                postMap.put("viewCount", post.getViewCount());
-                postMap.put("likeCount", post.getLikeCount());
-                postMap.put("commentCount", post.getCommentCount());
-                postMap.put("createdAt", post.getCreatedAt());
-                User author = userMapper.selectById(post.getUserId());
-                if (author != null) {
-                    postMap.put("username", author.getUsername());
-                    postMap.put("avatar", author.getAvatar());
-                }
-                item.put("post", postMap);
+            Map<String, Object> postMap = new java.util.HashMap<>();
+            postMap.put("id", post.getId());
+            postMap.put("userId", post.getUserId());
+            postMap.put("title", post.getTitle());
+            postMap.put("content", post.getContent());
+            postMap.put("tag", post.getTag());
+            postMap.put("imageUrl", post.getImageUrl());
+            postMap.put("viewCount", post.getViewCount());
+            postMap.put("likeCount", post.getLikeCount());
+            postMap.put("commentCount", post.getCommentCount());
+            postMap.put("createdAt", post.getCreatedAt());
+            User author = userMapper.selectById(post.getUserId());
+            if (author != null) {
+                postMap.put("username", author.getUsername());
+                postMap.put("avatar", author.getAvatar());
             }
+            item.put("post", postMap);
             return item;
-        }).collect(Collectors.toList());
+        }).filter(item -> item != null).collect(Collectors.toList());
 
         return Result.ok(Map.of(
                 "data", list,

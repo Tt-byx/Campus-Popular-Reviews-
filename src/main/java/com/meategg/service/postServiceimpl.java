@@ -199,7 +199,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             return Result.fail("评论对象名称包含违禁词「" + bannedWord + "」，请修改后重新发布");
         }
 
-        Integer existCount = reviewTargetMapper.selectCount(
+        Long existCount = reviewTargetMapper.selectCount(
                 com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query()
                         .eq("post_id", postId)
                         .eq("target_name", targetName.trim())
@@ -331,11 +331,29 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
                 }
             }
 
+            Set<String> commentUsernames = new HashSet<>();
+            for (CommentUser cu : comments) {
+                if (cu.getUsername() != null && !cu.getUsername().trim().isEmpty()) {
+                    commentUsernames.add(cu.getUsername());
+                }
+            }
+            Map<String, String> avatarMap = new HashMap<>();
+            if (!commentUsernames.isEmpty()) {
+                List<User> commentUserList = userMapper.selectList(
+                        com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query().in("username", commentUsernames));
+                for (User u : commentUserList) {
+                    if (u != null && u.getUsername() != null) {
+                        avatarMap.put(u.getUsername(), u.getAvatar());
+                    }
+                }
+            }
+
             for (CommentUser comment : comments) {
                 CommentContent cc = contentMap.get(comment.getId());
                 Map<String, Object> item = new HashMap<>();
                 item.put("commentId", comment.getId());
                 item.put("username", comment.getUsername());
+                item.put("avatar", avatarMap.get(comment.getUsername()));
                 item.put("content", cc != null ? cc.getContent() : "");
                 item.put("score", cc != null ? cc.getScore() : null);
                 item.put("createdAt", comment.getCreatedAt());
@@ -376,6 +394,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
         data.put("imageUrl", post.getImageUrl());
         data.put("userId", post.getUserId());
         data.put("username", user != null ? user.getUsername() : "未知用户");
+        data.put("avatar", user != null ? user.getAvatar() : null);
         data.put("createdAt", post.getCreatedAt());
         data.put("viewCount", post.getViewCount());
         return Result.ok(data);
@@ -419,7 +438,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             return Result.fail(403, "您已被禁言，无法发表评论");
         }
 
-        Integer existingCount = commentUserMapper.selectCount(
+        Long existingCount = commentUserMapper.selectCount(
                 com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
                         .eq("review_target_id", reviewTargetId)
                         .eq("username", username.trim())
@@ -489,12 +508,30 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             }
         }
 
+        Set<String> commentUsernames = new HashSet<>();
+        for (CommentUser cu : commentUsers) {
+            if (cu.getUsername() != null && !cu.getUsername().trim().isEmpty()) {
+                commentUsernames.add(cu.getUsername());
+            }
+        }
+        Map<String, String> avatarMap = new HashMap<>();
+        if (!commentUsernames.isEmpty()) {
+            List<User> commentUserList = userMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<User>query().in("username", commentUsernames));
+            for (User u : commentUserList) {
+                if (u != null && u.getUsername() != null) {
+                    avatarMap.put(u.getUsername(), u.getAvatar());
+                }
+            }
+        }
+
         for (CommentUser comment : commentUsers) {
             CommentContent cc = contentMap.get(comment.getId());
             Map<String, Object> item = new HashMap<>();
             item.put("commentId", comment.getId());
             item.put("reviewTargetId", comment.getReviewTargetId());
             item.put("username", comment.getUsername());
+            item.put("avatar", avatarMap.get(comment.getUsername()));
             item.put("content", cc != null ? cc.getContent() : "");
             item.put("score", cc != null ? cc.getScore() : null);
             item.put("createdAt", comment.getCreatedAt());
@@ -535,6 +572,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("content", p.getContent());
             item.put("tag", p.getTag());
             item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
             item.put("username", username.trim());
             item.put("avatar", user.getAvatar());
             item.put("createdAt", p.getCreatedAt());
@@ -605,6 +643,8 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             CommentContent cc = contentMap.get(cu.getId());
             Map<String, Object> item = new HashMap<>();
             item.put("commentId", cu.getId());
+            item.put("username", user.getUsername());
+            item.put("avatar", user.getAvatar());
             item.put("content", cc != null ? cc.getContent() : "");
             item.put("score", cc != null ? cc.getScore() : null);
             item.put("createdAt", cu.getCreatedAt());
@@ -1280,11 +1320,13 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             }
         }
         Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> avatarMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             List<User> users = userMapper.selectBatchIds(userIds);
             for (User u : users) {
                 if (u != null && u.getId() != null) {
                     usernameMap.put(Long.valueOf(u.getId()), u.getUsername());
+                    avatarMap.put(Long.valueOf(u.getId()), u.getAvatar());
                 }
             }
         }
@@ -1313,6 +1355,7 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
             item.put("imageUrl", p.getImageUrl());
             item.put("userId", p.getUserId());
             item.put("username", usernameMap.getOrDefault(p.getUserId(), "未知用户"));
+            item.put("avatar", avatarMap.getOrDefault(p.getUserId(), null));
             item.put("createdAt", p.getCreatedAt());
             item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
             item.put("commentCount", totalComments);
@@ -1488,10 +1531,10 @@ public class postServiceimpl extends ServiceImpl<PostMapper, Post> implements po
 
         List<Map<String, Object>> data = new ArrayList<>();
         for (ReviewTarget rt : allTargets) {
-            int commentCount = (int) commentUserMapper.selectCount(
+            int commentCount = commentUserMapper.selectCount(
                     com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query()
                             .eq("review_target_id", rt.getId())
-            );
+            ).intValue();
 
             String postAuthor = postUsernameMap.getOrDefault(rt.getPostId(), "未知");
 

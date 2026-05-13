@@ -26,6 +26,8 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
     private ReviewTargetMapper reviewTargetMapper;
     @Resource
     private CommentContentMapper commentContentMapper;
+    @Resource
+    private FollowMapper followMapper;
 
 
     @Override
@@ -276,6 +278,79 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
         removeById(user.getId());
 
         return Result.ok(200, "账号已成功注销", null);
+    }
+
+    @Override
+    public Result getUserPublicProfile(Long id) {
+        User user = getById(id);
+        if (user == null) {
+            return Result.fail("用户不存在");
+        }
+        user.setPassword(null);
+        return Result.ok(user);
+    }
+
+    @Override
+    public Result getUserPosts(Long userId) {
+        User user = getById(userId);
+        if (user == null) {
+            return Result.fail("用户不存在");
+        }
+
+        List<Post> posts = postMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                        .eq("user_id", userId)
+                        .orderByDesc("created_at")
+        );
+
+        List<java.util.Map<String, Object>> data = new java.util.ArrayList<>();
+        for (Post p : posts) {
+            int totalComments = 0;
+            List<ReviewTarget> targets = reviewTargetMapper.selectList(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers.<ReviewTarget>query().eq("post_id", p.getId()));
+            if (targets != null) {
+                for (ReviewTarget rt : targets) {
+                    int cnt = commentUserMapper.selectCount(
+                            com.baomidou.mybatisplus.core.toolkit.Wrappers.<CommentUser>query().eq("review_target_id", rt.getId())).intValue();
+                    totalComments += cnt;
+                }
+            }
+            java.util.Map<String, Object> item = new java.util.HashMap<>();
+            item.put("id", p.getId());
+            item.put("title", p.getTitle());
+            item.put("content", p.getContent());
+            item.put("tag", p.getTag());
+            item.put("imageUrl", p.getImageUrl());
+            item.put("userId", p.getUserId());
+            item.put("username", user.getUsername());
+            item.put("avatar", user.getAvatar());
+            item.put("createdAt", p.getCreatedAt());
+            item.put("viewCount", p.getViewCount() != null ? p.getViewCount() : 0);
+            item.put("commentCount", totalComments);
+            data.add(item);
+        }
+        return Result.ok(data);
+    }
+
+    @Override
+    public Result getUserStats(Long userId) {
+        long postCount = postMapper.selectCount(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Post>query()
+                        .eq("user_id", userId)
+        );
+        long followers = followMapper.selectCount(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Follow>query()
+                        .eq("following_id", userId)
+        );
+        long following = followMapper.selectCount(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<Follow>query()
+                        .eq("follower_id", userId)
+        );
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("postCount", postCount);
+        stats.put("followers", followers);
+        stats.put("following", following);
+        return Result.ok(stats);
     }
 }
 //1

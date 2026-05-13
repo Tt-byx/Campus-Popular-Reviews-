@@ -70,4 +70,25 @@ public interface userService extends IService<User> {
      * @return 操作结果
      */
     Result deleteUserAccount(String username);
+
+    /**
+     * 获取用户公开资料（通过ID）
+     * @param id 用户ID
+     * @return 用户公开资料
+     */
+    Result getUserPublicProfile(Long id);
+
+    /**
+     * 获取用户发布的帖子
+     * @param userId 用户ID
+     * @return 帖子列表
+     */
+    Result getUserPosts(Long userId);
+
+    /**
+     * 获取用户统计信息（帖子数、粉丝数、关注数）
+     * @param userId 用户ID
+     * @return 统计信息
+     */
+    Result getUserStats(Long userId);
 }

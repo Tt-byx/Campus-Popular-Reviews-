@@ -111,4 +111,22 @@ public class LoginController {
         }
         return userservice.deleteUserAccount(username);
     }
+
+    @Operation(summary = "获取用户公开资料", description = "根据用户ID获取公开资料（不含密码）")
+    @GetMapping("/{id}")
+    public Result<User> getUserById(@PathVariable Long id) {
+        return userservice.getUserPublicProfile(id);
+    }
+
+    @Operation(summary = "获取用户帖子列表", description = "根据用户ID获取其发布的所有帖子")
+    @GetMapping("/{id}/posts")
+    public Result<?> getUserPosts(@PathVariable Long id) {
+        return userservice.getUserPosts(id);
+    }
+
+    @Operation(summary = "获取用户统计信息", description = "根据用户ID获取帖子数、粉丝数、关注数")
+    @GetMapping("/{id}/stats")
+    public Result<?> getUserStats(@PathVariable Long id) {
+        return userservice.getUserStats(id);
+    }
 }

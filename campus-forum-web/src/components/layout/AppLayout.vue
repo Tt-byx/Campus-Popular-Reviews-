@@ -33,9 +33,8 @@ onMounted(async () => {
         userStore.setProfile(res.data)
       }
     } catch (e) {}
-    notiStore.fetchCounts()
-    // 每 30 秒轮询未读数
-    setInterval(() => notiStore.fetchCounts(), 30000)
+    // 启动全局轮询（多次调用只创建一个定时器）
+    notiStore.startPolling()
   }
 })
 </script>
