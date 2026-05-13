@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <!-- JavaParser -->
-    <groupId>com.github.javaparser</groupId>
-    <artifactId>javaparser-core</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <!-- 项目坐标 -->
+    <groupId>com.meategg</groupId>
+    <artifactId>campus-popular-reviews</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <!-- 项目属性 -->

@@ -49,6 +49,14 @@ public class Post {
     @TableField("view_count")
     private Integer viewCount;
 
+    @Schema(description = "点赞数")
+    @TableField("like_count")
+    private Integer likeCount;
+
+    @Schema(description = "收藏数")
+    @TableField("favorite_count")
+    private Integer favoriteCount;
+
     @Schema(description = "评论数（非数据库字段，动态计算）")
     @TableField(exist = false)
     private Integer commentCount;
