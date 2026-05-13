@@ -41,15 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (isApiRequest(request)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":401,\"message\":\"请先登录\"}");
-            return;
-        }
-
-        String redirectUrl = "/browse-post";
-        response.sendRedirect(redirectUrl);
+        // 前后端分离架构：所有未认证请求统一返回401 JSON响应
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"code\":401,\"message\":\"请先登录\"}");
     }
 
     private String resolveUsername(HttpServletRequest request) {
@@ -74,20 +69,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicPath(String path) {
-        return "/".equals(path)
-                || "/login".equals(path)
-                || "/register".equals(path)
-                || "/user/login".equals(path)
+        // API公开路径
+        return "/user/login".equals(path)
                 || "/user/create".equals(path)
-                || "/post-detail".equals(path)
-                || "/browse-post".equals(path)
-                || "/post".equals(path)
-                || "/profile".equals(path)
-                || "/review-target-detail".equals(path)
                 || "/post/list".equals(path)
-                || "/admin".equals(path)
                 || (path.startsWith("/post/") && !path.contains("/review-target") && !path.endsWith("/review-target"))
                 || (path.startsWith("/post/review-target/") && !path.endsWith("/comment"))
+                // 静态资源
                 || "/error".equals(path)
                 || "/favicon.ico".equals(path)
                 || path.startsWith("/css/")
