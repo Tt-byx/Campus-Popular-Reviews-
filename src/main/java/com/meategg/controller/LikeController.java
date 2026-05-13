@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Tag(name = "点赞模块", description = "帖子和评论的点赞功能")
 @RestController
-@RequestMapping("/api/like")
+@RequestMapping("/like")
 public class LikeController {
     @Resource
     private LikeService likeService;

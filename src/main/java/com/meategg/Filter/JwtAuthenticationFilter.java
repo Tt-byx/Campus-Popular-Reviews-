@@ -29,7 +29,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt != null) {
                 if (jwt.startsWith("Bearer ")) jwt = jwt.substring(7);
                 String role = jwtUtils.getRole(jwt);
+                Long userId = jwtUtils.getUserId(jwt);
                 request.setAttribute("role", role);
+                if (userId != null) {
+                    request.setAttribute("userId", userId);
+                }
             }
             filterChain.doFilter(request, response);
             return;

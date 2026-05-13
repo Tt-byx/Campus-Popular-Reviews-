@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @Tag(name = "通知模块", description = "消息通知功能")
 @RestController
-@RequestMapping("/api/notification")
+@RequestMapping("/notification")
 public class NotificationController {
     @Resource
     private NotificationService notificationService;

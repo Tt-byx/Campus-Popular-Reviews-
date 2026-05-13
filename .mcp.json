@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "chromium"],
+      "env": {
+        "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH": "C:\\Users\\28182\\AppData\\Local\\ms-playwright\\chromium-1224\\chrome-win64\\chrome.exe"
+      }
+    }
+  }
+}

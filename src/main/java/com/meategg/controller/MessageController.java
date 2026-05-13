@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Tag(name = "私信模块", description = "用户私信功能")
 @RestController
-@RequestMapping("/api/message")
+@RequestMapping("/message")
 public class MessageController {
     @Resource
     private MessageService messageService;

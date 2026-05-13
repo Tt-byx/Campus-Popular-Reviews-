@@ -69,7 +69,7 @@ class userServiceimplTest {
     @Test
     void login_shouldSucceedWithValidCredentials() {
         when(userMapper.selectOne(any())).thenReturn(testUser);
-        when(jwtUtils.createJwt(testUsername, "user")).thenReturn("mock-jwt-token");
+        when(jwtUtils.createJwt(eq(1L), eq(testUsername), eq("user"))).thenReturn("mock-jwt-token");
         when(jwtUtils.getExpireInSeconds()).thenReturn(3600L);
 
         Result<LoginResponse> result = userService.login(testUsername, testPassword);
@@ -94,9 +94,13 @@ class userServiceimplTest {
 
     @Test
     void register_shouldCreateNewUser() {
-        when(jwtUtils.createJwt(eq("newuser"), anyString())).thenReturn("mock-jwt-token");
+        when(userMapper.insert(any())).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(100);
+            return 1;
+        });
+        when(jwtUtils.createJwt(eq(100L), eq("newuser"), anyString())).thenReturn("mock-jwt-token");
         when(jwtUtils.getExpireInSeconds()).thenReturn(3600L);
-        when(userMapper.insert(any())).thenReturn(1);
 
         Result<LoginResponse> result = userService.register("newuser", "newpassword");
 

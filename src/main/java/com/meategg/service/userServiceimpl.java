@@ -39,7 +39,7 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
         }
 
         String role = user.getRole() != null ? user.getRole() : "user";
-        String jwt = jwtUtils.createJwt(username, role);
+        String jwt = jwtUtils.createJwt(user.getId().longValue(), username, role);
         LoginResponse response = new LoginResponse(
                 jwt,
                 "Bearer",
@@ -69,7 +69,7 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
         save(user);
 
         String role = "user";
-        String jwt = jwtUtils.createJwt(username, role);
+        String jwt = jwtUtils.createJwt(user.getId().longValue(), username, role);
         LoginResponse response = new LoginResponse(
                 jwt,
                 "Bearer",
@@ -133,7 +133,7 @@ public class userServiceimpl extends ServiceImpl<UserMapper, User> implements us
 
         if (usernameChanged) {
             String role = user.getRole() != null ? user.getRole() : "user";
-            String newJwt = jwtUtils.createJwt(newUsername, role);
+            String newJwt = jwtUtils.createJwt(user.getId().longValue(), newUsername, role);
             responseData.put("token", newJwt);
             responseData.put("tokenType", "Bearer");
             responseData.put("expiresIn", jwtUtils.getExpireInSeconds());

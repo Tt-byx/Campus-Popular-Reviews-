@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @Tag(name = "关注模块", description = "用户关注功能")
 @RestController
-@RequestMapping("/api/follow")
+@RequestMapping("/follow")
 public class FollowController {
     @Resource
     private FollowService followService;

@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 @Tag(name = "收藏模块", description = "帖子收藏功能")
 @RestController
-@RequestMapping("/api/favorite")
+@RequestMapping("/favorite")
 public class FavoriteController {
     @Resource
     private FavoriteService favoriteService;
