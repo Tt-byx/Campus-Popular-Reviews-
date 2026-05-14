@@ -63,3 +63,9 @@ dist/
 # Claude IDE
 .claude/
 .playwright-mcp/
+
+# Docs (fix reports)
+docs/
+
+# Maven wrapper
+.mvn/

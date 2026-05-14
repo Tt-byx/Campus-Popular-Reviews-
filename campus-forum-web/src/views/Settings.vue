@@ -58,7 +58,7 @@ async function handleAvatar(file) {
 async function saveProfile() {
   saving.value = true
   try {
-    const res = await updateProfile({ username: form.value.username, signature: form.value.signature })
+    const res = await updateProfile({ username: form.value.username, signature: form.value.signature, avatar: userStore.avatar })
     if (res.code === 200) {
       ElMessage.success('保存成功')
       if (res.data?.user) userStore.setProfile(res.data.user)
