@@ -1,0 +1,17 @@
+import request from './request'
+
+export const getRole = () => request.get('/admin/role')
+export const getUsers = () => request.get('/admin/users')
+export const muteUser = (username) => request.post(`/admin/user/${username}/mute`)
+export const deleteUser = (username) => request.delete(`/admin/user/${username}`)
+export const promoteUser = (username) => request.post(`/admin/user/${username}/promote`)
+export const demoteUser = (username) => request.post(`/admin/user/${username}/demote`)
+export const getPosts = () => request.get('/admin/posts')
+export const deletePostAdmin = (id) => request.delete(`/admin/post/${id}`)
+export const getReviewTargetsAdmin = () => request.get('/admin/review-targets')
+export const deleteReviewTargetAdmin = (id) => request.delete(`/admin/review-target/${id}`)
+export const getCommentsAdmin = () => request.get('/admin/comments')
+export const deleteCommentAdmin = (id) => request.delete(`/admin/comment/${id}`)
+export const getBannedWords = () => request.get('/admin/banned-words')
+export const addBannedWord = (word) => request.post('/admin/banned-words', { word })
+export const deleteBannedWord = (id) => request.delete(`/admin/banned-words/${id}`)

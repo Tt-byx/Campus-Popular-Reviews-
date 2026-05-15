@@ -48,6 +48,8 @@ logs/
 *.log
 
 # Local configuration
+.env
+doc/
 application-local.properties
 
 # Node.js
